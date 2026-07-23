@@ -1,0 +1,19 @@
+[project]
+name = "geneask"
+version = "0.1.0"
+description = "Human genome variant interpretation (ClinVar screen, traits, pharmacogenomics) — sibling to MethylAsk"
+requires-python = ">=3.10"
+dependencies = ["biocore"]
+
+[project.optional-dependencies]
+ingest = ["pysam"]   # 23andMe/CG -> VCF anchoring
+
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["geneask*"]
+
+[tool.setuptools.package-data]
+"geneask" = ["data/reference/*.json.gz", "data/reference/*.json"]
