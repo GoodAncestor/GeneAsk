@@ -3,7 +3,11 @@ name = "geneask"
 version = "0.1.0"
 description = "Human genome variant interpretation (ClinVar screen, traits, pharmacogenomics) — sibling to MethylAsk"
 requires-python = ">=3.10"
-dependencies = ["biocore"]
+dependencies = [
+    # GoodAncestor/bio-core — shared mechanism (private repo). git-source so a clean
+    # install resolves from GitHub; private-repo access uses git credentials (see README).
+    "biocore @ git+https://github.com/GoodAncestor/bio-core.git",
+]
 
 [project.optional-dependencies]
 ingest = ["pysam"]   # 23andMe/CG -> VCF anchoring

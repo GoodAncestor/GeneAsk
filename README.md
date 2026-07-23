@@ -32,3 +32,18 @@ work, 10 of 11 were refuted by whole-genome sequencing. GeneAsk therefore report
 the calling platform and multi-source confidence, and **never presents a
 single-array pathogenic hit as robust**. This is the same evidence-tiering
 discipline MethylAsk applies to methylation associations.
+
+## Install
+
+GeneAsk depends on the private `GoodAncestor/bio-core` repo, declared as a
+git-source dependency in `pyproject.toml`. A plain `pip install .` resolves it
+from GitHub, so the machine needs git access to the private repo (SSH key or a
+token in the git credential helper).
+
+    # A) let pip pull bio-core from GitHub (needs private-repo git access)
+    pip install .
+
+    # B) develop against a local bio-core checkout instead
+    git clone https://github.com/GoodAncestor/bio-core.git ../bio-core
+    pip install -e ../bio-core
+    pip install -e . --no-deps
