@@ -11,7 +11,6 @@ no-ref/PAR; reconstruct each haplotype over the union span [B,E] from the FASTA
 emit REF/ALT/GT; bcftools norm left-aligns & trims downstream.
 """
 import sys, argparse, bz2, gzip, json, re
-import pysam
 
 SKIP = {'ref','no-call','no-ref','PAR-called-in-X','no-call-rc','no-call-ri'}
 RS = re.compile(r'rs\d+')
@@ -22,6 +21,7 @@ def opener(p):
     return open(p,'r',errors='replace')
 
 def main():
+    import pysam  # optional 'ingest' extra; imported lazily
     ap=argparse.ArgumentParser()
     ap.add_argument("--infile", required=True)
     ap.add_argument("--fasta", required=True)

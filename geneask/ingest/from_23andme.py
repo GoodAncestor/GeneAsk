@@ -9,7 +9,6 @@ Genotypes: "AA","AG"(SNP), "--"(no-call), single char (haploid Y/MT/male-X),
 Phased format: rsid, chromosome, position, allele1, allele2 (two columns).
 """
 import sys, argparse, gzip
-import pysam
 
 VALID_BASES = set("ACGT")
 
@@ -31,6 +30,7 @@ def parse_args():
     return ap.parse_args()
 
 def main():
+    import pysam  # optional 'ingest' extra; imported lazily
     a = parse_args()
     fa = pysam.FastaFile(a.fasta)
     ref_contigs = set(fa.references)
