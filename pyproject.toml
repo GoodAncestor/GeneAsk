@@ -16,6 +16,7 @@ dependencies = [
 
 [project.optional-dependencies]
 ingest = ["pysam"]   # 23andMe/CG -> VCF anchoring
+alphagenome = ["alphagenome"]   # regulatory VEP enrichment (opt-in, key-gated); heavy dep, imported lazily
 
 [build-system]
 requires = ["setuptools>=61"]
