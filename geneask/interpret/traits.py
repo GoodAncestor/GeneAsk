@@ -87,11 +87,9 @@ def _tier_from_confidence(rec) -> Tier:
     return Tier.SPECULATIVE
 
 
-def trait_findings(vcf: str, trait_table: str) -> list[Finding]:
-    """Interpret a trait table against the unified callset -> bio-core Findings."""
-    traits = list(csv.DictReader(open(trait_table)))
-    rsids = [t["rsid"] for t in traits if t.get("rsid")]
-    calls = load_callset_by_rsid(vcf, rsids)
+def _findings_from_calls(traits: list, calls: dict, source: str) -> list[Finding]:
+    """Build trait Findings from a {rsid: rec} callset. rec needs 'gt_bases'
+    ('A/G') and is passed to _tier_from_confidence for the tier."""
     findings = []
     for t in traits:
         rec = calls.get(t.get("rsid"))
@@ -104,7 +102,33 @@ def trait_findings(vcf: str, trait_table: str) -> list[Finding]:
         if carries is not None:
             desc += f"; carries effect allele {ea}: {'yes' if carries else 'no'}"
         findings.append(Finding(
-            marker=t.get("rsid", "?"), source="unified_callset",
+            marker=t.get("rsid", "?"), source=source,
             description=desc, tier=_tier_from_confidence(rec),
             categories=[Category.TRAIT]))
     return findings
+
+
+def trait_findings(vcf: str, trait_table: str) -> list[Finding]:
+    """Interpret a trait table against a unified VCF callset -> bio-core Findings."""
+    traits = list(csv.DictReader(open(trait_table)))
+    rsids = [t["rsid"] for t in traits if t.get("rsid")]
+    calls = load_callset_by_rsid(vcf, rsids)
+    return _findings_from_calls(traits, calls, source="unified_callset")
+
+
+def trait_findings_from_parse(parsed, trait_table: str) -> list[Finding]:
+    """Interpret a trait table against a parsed array callset (no bcftools/VCF).
+    Matches by rsID directly from the vendor parser's GenotypeRecords."""
+    traits = list(csv.DictReader(open(trait_table)))
+    by_rsid = {r.rsid: r for r in parsed.records if not r.is_nocall}
+    calls = {}
+    for t in traits:
+        r = by_rsid.get(t.get("rsid"))
+        if r is None:
+            continue
+        gt = "/".join(sorted(a for a in (r.allele1, r.allele2) if a))
+        # array calls carry no per-source confidence; mark platform ARRAY so the
+        # tier heuristic treats them as single-source array (not WGS-confirmed).
+        calls[r.rsid] = {"gt_bases": gt, "platf": "ARRAY", "nsrc": 1,
+                         "conc": 1, "srcs": "array"}
+    return _findings_from_calls(traits, calls, source="array_callset")
