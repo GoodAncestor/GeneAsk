@@ -69,9 +69,22 @@ def carried_from_parse(parsed: ParseResult, panel: dict,
     nothing; that failure mode is why this is coordinate-aware, not naive.
     """
     from .lift import lift_37_to_38
+    from .build_detect import detect_build
     pos_idx = _index_panel_by_pos(panel)
     out: list[dict] = []
     build = (parsed.build or "unknown").replace("GRCh", "").replace("hg", "")
+
+    # header build claims are sometimes wrong (MyHappyGenes says 37.1, ships 38),
+    # so when unknown — or always, as a cross-check — vote from marker-SNP
+    # positions. A confident position-based call overrides an unknown header.
+    detected = detect_build(parsed.records)
+    if build not in ("37", "38") and detected:
+        build = detected
+        parsed.notes.append(f"genome build auto-detected as GRCh{detected} from marker positions")
+    elif detected and detected != build:
+        parsed.notes.append(f"header build GRCh{build} disagrees with marker positions "
+                            f"(GRCh{detected}); using detected GRCh{detected}")
+        build = detected
     lifted_used = unliftable = 0
 
     for r in parsed.records:
