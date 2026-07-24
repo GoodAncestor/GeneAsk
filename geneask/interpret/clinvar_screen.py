@@ -46,10 +46,20 @@ def load_panel(path: str | None = None) -> dict:
 
 
 def index_by_variant_id(panel: dict) -> dict:
-    """Flatten the gene-keyed panel into {variant_id: {gene, **variant_record}}.
+    """Flatten to {variant_id: {gene, **variant_record}} keyed on 'chrom-pos-ref-alt'
+    (GRCh38, matching the callset key).
 
-    variant_id is 'chrom-pos-ref-alt' (GRCh38), matching the callset key.
+    Prefers the FULL ClinVar mirror when a worker has built it (CLINVAR_MIRROR_DB):
+    the complete ~2.9M-variant set replaces the bundled 157-gene panel as a drop-in.
+    Falls back to flattening the bundled panel when no mirror exists.
     """
+    try:
+        from ..annotators.clinvar_mirror import load_panel_from_mirror
+        full = load_panel_from_mirror()
+        if full:
+            return full
+    except Exception:
+        pass
     idx = {}
     for gene, entry in panel.items():
         for v in entry.get("variants", []):
