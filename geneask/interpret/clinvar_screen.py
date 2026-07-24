@@ -50,7 +50,7 @@ def index_by_variant_id(panel: dict) -> dict:
     (GRCh38, matching the callset key).
 
     Prefers the FULL ClinVar mirror when a worker has built it (CLINVAR_MIRROR_DB):
-    the complete ~2.9M-variant set replaces the bundled 157-gene panel as a drop-in.
+    the complete ~4.2M-variant set replaces the bundled 157-gene panel as a drop-in.
     Falls back to flattening the bundled panel when no mirror exists.
     """
     try:

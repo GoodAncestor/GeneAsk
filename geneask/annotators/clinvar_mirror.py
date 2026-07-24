@@ -1,7 +1,8 @@
 """Full ClinVar annotator — local mirror of the weekly GRCh38 VCF.
 
-Replaces the bundled 157-gene panel with the complete ClinVar set (~2.9M
-variants). refresh() downloads clinvar.vcf.gz (~193MB, GRCh38) and builds a
+Replaces the bundled 157-gene panel with the complete ClinVar set (~4.2M
+variants, measured 2026-07-24). refresh() downloads clinvar.vcf.gz (~193MB,
+GRCh38) and builds a
 SQLite keyed by variant_id ('chrom-pos-ref-alt' — the same key the ClinVar
 screen and carried-variant extractor already use), so a full-panel screen is a
 drop-in for the 157-gene one: index_by_variant_id-shaped lookups, offline.
