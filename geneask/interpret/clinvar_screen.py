@@ -21,6 +21,19 @@ from biocore.providers.base import Finding, Tier, Category
 
 _PANEL = Path(__file__).resolve().parents[1] / "data" / "reference" / "clinvar_panel_157genes.json.gz"
 
+# Hereditary cancer-predisposition genes (ACMG SF v3.2 cancer set + common
+# syndrome genes). A pathogenic hit here is tagged topic='cancer' so it groups
+# and filters under the Cancer subject. Not exhaustive — extended as the panel grows.
+_CANCER_GENES = {
+    "BRCA1", "BRCA2", "PALB2", "TP53", "PTEN", "STK11", "CDH1", "APC", "MUTYH",
+    "MLH1", "MSH2", "MSH6", "PMS2", "EPCAM",            # Lynch / mismatch-repair
+    "RB1", "VHL", "MEN1", "RET", "NF1", "NF2", "TSC1", "TSC2", "SMAD4", "BMPR1A",
+    "SDHB", "SDHC", "SDHD", "SDHAF2", "MAX", "TMEM127", "WT1", "BAP1",
+    "CHEK2", "ATM", "NBN", "BARD1", "BRIP1", "RAD51C", "RAD51D",  # breast/ovarian
+    "CDKN2A", "CDK4", "MITF",                            # melanoma
+    "FH", "FLCN", "MET", "HOXB13", "POLD1", "POLE", "GREM1", "NTHL1",
+}
+
 
 def load_panel(path: str | None = None) -> dict:
     """Load the bundled ClinVar panel, gene-keyed:
@@ -79,9 +92,16 @@ def screen_findings(carried_variant_ids: list[dict], panel: dict | None = None) 
         # 10 of 11 array 'pathogenic' calls were WGS-refuted in the source project)
         if v.get("platform") == "ARRAY" and tier == Tier.ROBUST:
             tier = Tier.MODERATE
+        gene = rec.get("gene", "?")
+        # a cancer-predisposition gene -> topic cancer, else generic clinical
+        topic = "cancer" if gene in _CANCER_GENES else "clinical"
         findings.append(Finding(
             marker=v.get("variant_id", "?"), source="clinvar_panel_157",
-            description=f"{rec.get('gene','?')}: {rec.get('clinical_significance', sig)}"
+            description=f"{gene}: {rec.get('clinical_significance', sig)}"
                         f" (genotype {v.get('genotype','?')}, {v.get('platform','?')})",
-            tier=tier, categories=[Category.CLINICAL]))
+            tier=tier, categories=[Category.CLINICAL],
+            detail={"gene": gene, "topic": topic, "modality": "genome",
+                    "clinical_significance": rec.get("clinical_significance", sig),
+                    "review_status": rec.get("review_status"),
+                    "gold_stars": stars, "platform": v.get("platform")}))
     return findings
