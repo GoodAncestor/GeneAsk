@@ -59,6 +59,18 @@ def index_by_variant_id(panel: dict) -> dict:
     return idx
 
 
+def _abbrev_allele(geno: str, keep: int = 8) -> str:
+    """Shorten long indel alleles for display: a 331 bp deletion becomes
+    'A/AGGAGG…(331bp)' instead of dumping the full sequence. Splits on '/' so a
+    diploid genotype abbreviates each allele; short SNP alleles pass through."""
+    def short(a: str) -> str:
+        a = a.strip()
+        return a if len(a) <= keep + 3 else f"{a[:keep]}…({len(a)}bp)"
+    if not geno or geno == "?":
+        return geno
+    return "/".join(short(a) for a in geno.split("/"))
+
+
 def _tier_from_review(sig: str, gold_stars: int) -> Tier:
     sig = (sig or "").lower()
     if "conflicting" in sig:
@@ -95,10 +107,11 @@ def screen_findings(carried_variant_ids: list[dict], panel: dict | None = None) 
         gene = rec.get("gene", "?")
         # a cancer-predisposition gene -> topic cancer, else generic clinical
         topic = "cancer" if gene in _CANCER_GENES else "clinical"
+        geno = _abbrev_allele(v.get("genotype", "?"))
         findings.append(Finding(
             marker=v.get("variant_id", "?"), source="clinvar_panel_157",
             description=f"{gene}: {rec.get('clinical_significance', sig)}"
-                        f" (genotype {v.get('genotype','?')}, {v.get('platform','?')})",
+                        f" (genotype {geno}, {v.get('platform','?')})",
             tier=tier, categories=[Category.CLINICAL],
             detail={"gene": gene, "topic": topic, "modality": "genome",
                     "clinical_significance": rec.get("clinical_significance", sig),
