@@ -20,4 +20,4 @@ build-backend = "setuptools.build_meta"
 include = ["geneask*"]
 
 [tool.setuptools.package-data]
-"geneask" = ["data/reference/*.json.gz", "data/reference/*.json"]
+"geneask" = ["data/reference/*.json.gz", "data/reference/*.json", "data/reference/*.csv"]

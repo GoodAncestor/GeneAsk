@@ -11,7 +11,14 @@ the addition is emitting bio-core Finding objects.
 """
 from __future__ import annotations
 import subprocess, csv
+from pathlib import Path
 from biocore.providers.base import Finding, Tier, Category
+
+# a small bundled table of well-established, non-alarming consumer-genetics traits
+# (caffeine/alcohol metabolism, lactase persistence, earwax type, ...). Used when
+# a caller doesn't supply its own table.
+DEFAULT_TRAIT_TABLE = str(Path(__file__).resolve().parents[1]
+                          / "data" / "reference" / "trait_table.csv")
 
 
 def _run(cmd: str) -> str:
@@ -88,9 +95,11 @@ def trait_findings(vcf: str, trait_table: str) -> list[Finding]:
     findings = []
     for t in traits:
         rec = calls.get(t.get("rsid"))
-        geno = rec["gt_bases"] if rec else "not_in_callset"
+        if rec is None:
+            continue  # the person's data doesn't cover this SNP -> don't report it
+        geno = rec["gt_bases"]
         ea = t.get("effect_allele", "").strip()
-        carries = (ea in geno.split("/")) if (rec and ea) else None
+        carries = (ea in geno.split("/")) if ea else None
         desc = f"{t.get('trait','trait')} ({t.get('gene','')}): genotype {geno}"
         if carries is not None:
             desc += f"; carries effect allele {ea}: {'yes' if carries else 'no'}"

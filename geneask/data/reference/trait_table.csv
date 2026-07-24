@@ -1,0 +1,19 @@
+rsid,effect_allele,trait,gene
+rs4988235,A,Lactase persistence (ability to digest milk as an adult),MCM6
+rs671,A,Alcohol flush reaction (acetaldehyde build-up after drinking),ALDH2
+rs1229984,T,Faster alcohol metabolism,ADH1B
+rs762551,A,Faster caffeine metabolism,CYP1A2
+rs1815739,T,Muscle fiber type (endurance vs power; "sprint gene"),ACTN3
+rs17822931,T,Dry earwax and reduced body odor,ABCC11
+rs4680,A,COMT enzyme activity (dopamine breakdown; "warrior/worrier"),COMT
+rs1042713,A,Beta-2 adrenergic receptor variant,ADRB2
+rs53576,G,Oxytocin receptor variant (studied re: empathy),OXTR
+rs6152,A,Androgen receptor variant (studied re: hair loss),AR
+rs12913832,G,Blue vs brown eye color,HERC2
+rs1805007,T,Red hair and fair skin (melanocortin-1 receptor),MC1R
+rs713598,C,Bitter taste perception (PROP/PTC sensitivity),TAS2R38
+rs4481887,A,Ability to smell asparagus metabolites in urine,OR2M7
+rs1726866,A,Bitter taste sensitivity,TAS2R38
+rs7903146,T,Type 2 diabetes association (common variant),TCF7L2
+rs9939609,A,Body-mass-index association (appetite regulation),FTO
+rs1799971,G,Mu-opioid receptor variant,OPRM1
