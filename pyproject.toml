@@ -9,6 +9,9 @@ dependencies = [
     # GoodAncestor/bio-core — shared mechanism (private repo). git-source so a clean
     # install resolves from GitHub; private-repo access uses git credentials (see README).
     "biocore @ git+https://github.com/GoodAncestor/bio-core.git",
+    # GRCh37->38 liftover for build-37 consumer arrays (panel is GRCh38); uses the
+    # bundled UCSC chain. Without it, build-37 uploads silently match no ClinVar sites.
+    "pyliftover",
 ]
 
 [project.optional-dependencies]
@@ -22,4 +25,5 @@ build-backend = "setuptools.build_meta"
 include = ["geneask*"]
 
 [tool.setuptools.package-data]
-"geneask" = ["data/reference/*.json.gz", "data/reference/*.json", "data/reference/*.csv"]
+"geneask" = ["data/reference/*.json.gz", "data/reference/*.json", "data/reference/*.csv",
+             "data/reference/chains/*.chain.gz"]

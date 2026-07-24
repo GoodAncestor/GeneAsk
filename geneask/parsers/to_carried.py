@@ -34,27 +34,76 @@ def _index_panel_by_pos(panel: dict) -> dict:
     return idx
 
 
+def _match_at(pos_idx: dict, chrom: str, pos: int, called: set,
+              geno: str, platform: str, out: list) -> int:
+    """Emit carried-variant dicts for panel SNVs at (chrom,pos) whose ALT is
+    carried. Returns the number of hits emitted."""
+    hits = pos_idx.get((chrom, pos))
+    if not hits:
+        return 0
+    n = 0
+    for ref, alt, vid in hits:
+        # indel-anchor protection (cf. allelix ADR-0011): an array readout is a
+        # single base, so it must only match SNV substitutions (single-base ref
+        # AND alt). A single-base call must never match an anchor-base indel like
+        # 'TC->T', where 'T' is just the anchor, not a real allele.
+        if len(ref) != 1 or len(alt) != 1:
+            continue
+        if alt in called:
+            out.append({"variant_id": vid, "genotype": geno, "platform": platform})
+            n += 1
+    return n
+
+
 def carried_from_parse(parsed: ParseResult, panel: dict,
                        platform: str = "ARRAY") -> list[dict]:
-    """Match parsed array records against the panel; return carried-variant dicts
-    {variant_id, genotype, platform} for panel variants whose ALT the person carries."""
+    """Match parsed array records against the GRCh38 ClinVar panel; return
+    carried-variant dicts {variant_id, genotype, platform}.
+
+    Build handling (the panel is GRCh38):
+      - build '38'      -> match coordinates as-is
+      - build '37'      -> lift each coordinate 37->38, then match
+      - build 'unknown' -> try BOTH as-is and lifted, keep whichever the record
+                           hits (handles MyHappyGenes, whose header lies about build)
+    A build-37 upload matched against GRCh38 without liftover silently returns
+    nothing; that failure mode is why this is coordinate-aware, not naive.
+    """
+    from .lift import lift_37_to_38
     pos_idx = _index_panel_by_pos(panel)
     out: list[dict] = []
+    build = (parsed.build or "unknown").replace("GRCh", "").replace("hg", "")
+    lifted_used = unliftable = 0
+
     for r in parsed.records:
         if r.is_nocall:
             continue
-        hits = pos_idx.get((r.chrom, r.pos))
-        if not hits:
-            continue
-        called = {a for a in (r.allele1, r.allele2) if a}   # bases the person carries
-        for ref, alt, vid in hits:
-            # indel-anchor protection (cf. allelix ADR-0011): an array readout is a
-            # single base, so it must only match SNV substitutions (single-base
-            # ref AND alt). A single-base call must never match an anchor-base
-            # indel like 'TC->T', where 'T' is just the anchor, not a real allele.
-            if len(ref) != 1 or len(alt) != 1:
+        called = {a for a in (r.allele1, r.allele2) if a}
+        geno = "/".join(sorted(called)) or (next(iter(called), ""))
+
+        if build == "38":
+            _match_at(pos_idx, r.chrom, r.pos, called, geno, platform, out)
+        elif build == "37":
+            lp = lift_37_to_38(r.chrom, r.pos)
+            if lp is None:
+                unliftable += 1
                 continue
-            if alt in called:
-                geno = "/".join(sorted(a for a in (r.allele1, r.allele2) if a)) or alt
-                out.append({"variant_id": vid, "genotype": geno, "platform": platform})
+            lifted_used += 1
+            _match_at(pos_idx, lp[0], lp[1], called, geno, platform, out)
+        else:  # unknown: try as-is (maybe already 38) then lifted (maybe 37)
+            hit = _match_at(pos_idx, r.chrom, r.pos, called, geno, platform, out)
+            if not hit:
+                lp = lift_37_to_38(r.chrom, r.pos)
+                if lp is not None:
+                    _match_at(pos_idx, lp[0], lp[1], called, geno, platform, out)
+
+    # surface what we did, so the report can note it rather than silently 0-match
+    if build == "37":
+        note = f"input build GRCh37: lifted to GRCh38 ({lifted_used} sites"
+        if unliftable:
+            note += f", {unliftable} unliftable"
+        note += ") before ClinVar matching"
+        parsed.notes.append(note)
+    elif build == "unknown":
+        parsed.notes.append("input build unknown: matched at GRCh38 and, where that "
+                            "missed, at lifted GRCh37->38 coordinates")
     return out
