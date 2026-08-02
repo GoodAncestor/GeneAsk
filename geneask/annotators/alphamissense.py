@@ -89,6 +89,13 @@ def build_mirror(db_path: str | None = None, workdir: str | None = None,
     return {"source": "alphamissense", "variants": n, "db": db}
 
 
+def mirror_available(db_path: str | None = None) -> bool:
+    """Whether a mirror exists at db_path (or the default/env location) — lets a
+    caller (e.g. the annotated-VCF writer) report accurate provenance without
+    duplicating the resolution logic every lookup() call already applies."""
+    return Path(_db_path(db_path)).exists()
+
+
 def lookup(variant_id: str, db_path: str | None = None) -> dict | None:
     db = _db_path(db_path)
     if not Path(db).exists():

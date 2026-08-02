@@ -20,6 +20,7 @@ layer, evidence tiering, coordinate handling — lives in bio-core and is import
 - `geneask.ingest.from_23andme` / `from_complete_genomics` / `consensus` — raw genotype → reference-anchored VCF, multi-source consensus
 - `geneask.interpret.traits` — genotype lookup with multi-source confidence → bio-core Findings
 - `geneask.interpret.clinvar_screen` — clinical screen against the bundled 157-gene ClinVar panel
+- `geneask.interpret.annotated_vcf` — annotated-VCF output: VCF in, VCF out, GA_* INFO fields (ClinVar + AlphaMissense) with provenance in the header, so GeneAsk can sit as a step in someone else's pipeline instead of only producing a report. CLI: `scripts/annotate_vcf.py`.
 
 ## Bundled reference data
 
