@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+# SPDX-License-Identifier: Apache-2.0
+# Copyright (C) 2026 GoodAncestor
 """Complete Genomics var-ASM.tsv  ->  GRCh37 VCF (FASTA-anchored, bcftools-normalizable).
 
 CG columns (0-based idx):

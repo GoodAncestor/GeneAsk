@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright (C) 2026 GoodAncestor
 """Shared line-reading helpers for the vendor parsers."""
 from __future__ import annotations
 import gzip, csv, io

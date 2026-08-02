@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright (C) 2026 GoodAncestor
 """CPIC pharmacogenomics annotator — local mirror of the CPIC knowledge base.
 
 Pharmacogenomics = how a person's genotype affects drug response. The clinical

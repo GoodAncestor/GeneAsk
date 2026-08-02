@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright (C) 2026 GoodAncestor
 """GRCh37 -> GRCh38 coordinate liftover for consumer-genotype uploads.
 
 The ClinVar panel is GRCh38, but most consumer arrays (AncestryDNA, FTDNA,

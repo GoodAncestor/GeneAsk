@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright (C) 2026 GoodAncestor
 """GeneAsk annotators — external variant-annotation sources, mirror-first.
 
 Each annotator builds a local SQLite mirror from a public bulk download

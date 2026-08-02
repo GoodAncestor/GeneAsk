@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+# SPDX-License-Identifier: Apache-2.0
+# Copyright (C) 2026 GoodAncestor
 """
 Trait-analysis framework for the unified multi-source genome.
 Given a trait table (rsid, effect_allele, trait, notes) and the unified

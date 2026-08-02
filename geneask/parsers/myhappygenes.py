@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright (C) 2026 GoodAncestor
 """MyHappyGenes (Tempus) genotype export. TAB-delimited, 5 columns: SNP Name,
 Chr, Position, 'Allele1 - Forward', 'Allele2 - Forward'. Detection:
 'MyHappyGenes' or 'TEMPUS' in a comment. Header claims build 37.1 but real

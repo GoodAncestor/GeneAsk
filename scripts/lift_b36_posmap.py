@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+# SPDX-License-Identifier: Apache-2.0
+# Copyright (C) 2026 GoodAncestor
 """Build a posmap (rsid -> GRCh37 contig,pos) by lifting a 23andMe b36 file's
 positions through an Ensembl NCBI36->GRCh37 chain with CrossMap's Python API."""
 import argparse, json

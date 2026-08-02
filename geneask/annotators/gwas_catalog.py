@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright (C) 2026 GoodAncestor
 """NHGRI-EBI GWAS Catalog annotator — local mirror + per-rsID lookup.
 
 The Catalog is a single ~735MB TSV of curated SNP-trait associations (rsID,

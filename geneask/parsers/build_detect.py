@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright (C) 2026 GoodAncestor
 """Genome-build auto-detection from position data (cf. allelix ADR-0021).
 
 Consumer arrays report an rsID and a position, but the header's build claim is

@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright (C) 2026 GoodAncestor
 """Family Tree DNA — three export shapes from the same chip data:
   1. CSV, double-quoted, header 'RSID,CHROMOSOME,POSITION,RESULT' (concatenated genotype)
   2. Illumina raw: TAB-delimited, unquoted 'RSID CHROMOSOME POSITION RESULT'

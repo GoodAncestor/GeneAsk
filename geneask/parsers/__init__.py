@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright (C) 2026 GoodAncestor
 """Consumer-genotype parser registry.
 
 detect_parser() sniffs a file against each registered vendor parser (cheap header

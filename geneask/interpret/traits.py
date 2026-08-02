@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright (C) 2026 GoodAncestor
 """Trait interpretation — genotype lookup with multi-source confidence.
 
 Given a trait table (rsid, effect_allele, trait, gene) and the unified

@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright (C) 2026 GoodAncestor
 """AlphaGenome regulatory variant-effect enrichment — key-gated, cached, capped.
 
 Every other source we integrate is a LOOKUP (ClinVar/GWAS/gnomAD) — it can only

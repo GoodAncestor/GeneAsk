@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright (C) 2026 GoodAncestor
 """MyHeritage DNA raw export. CSV, double-quoted, columns rsid, chrom, pos,
 RESULT (concatenated genotype). Detection: 'MyHeritage' in a comment line.
 Build 37. Handles the doubled-double-quote field variant via csv.reader.

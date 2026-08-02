@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright (C) 2026 GoodAncestor
 """GeneAsk: human genome variant interpretation.
 
 The variant-interpretation sibling to MethylAsk (methylation). Answers "what do

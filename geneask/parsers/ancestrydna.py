@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright (C) 2026 GoodAncestor
 """AncestryDNA raw export. Tab-delimited, 5 columns: rsid, chrom, pos, allele1,
 allele2. Detection: '#AncestryDNA' in the first comment line. Build 37. No-call
 = '0' per allele. Chrom codes 23=X 24=Y 25=PAR->X 26=MT. V1/V2 chips share layout.

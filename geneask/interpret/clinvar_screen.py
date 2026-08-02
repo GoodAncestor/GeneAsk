@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright (C) 2026 GoodAncestor
 """ClinVar clinical screen against the bundled 157-gene panel.
 
 Loads the cached ClinVar panel (ACMG SF v3.2 secondary-findings genes + carrier

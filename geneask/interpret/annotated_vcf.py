@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright (C) 2026 GoodAncestor
 """Annotated-VCF output — VCF in, VCF out, with GeneAsk annotation as declared INFO.
 
 Turns GeneAsk from a report generator into a pipeline step: read any VCF, run it

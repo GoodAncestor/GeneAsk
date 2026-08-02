@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+# SPDX-License-Identifier: Apache-2.0
+# Copyright (C) 2026 GoodAncestor
 """CLI: annotated-VCF output — run GeneAsk's ClinVar (+AlphaMissense) screen
 over a VCF and re-emit it with GA_* INFO fields and provenance in the header,
 instead of a human-facing report. New tool (not generalized from the personal

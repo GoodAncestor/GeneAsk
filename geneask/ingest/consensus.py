@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+# SPDX-License-Identifier: Apache-2.0
+# Copyright (C) 2026 GoodAncestor
 """Collapse merged 6-sample VCF -> single consensus VCF with provenance INFO.
 INFO fields added:
   SRCS   = comma list of sources with a called GT (e.g. A2013,CG)

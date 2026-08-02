@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+# SPDX-License-Identifier: Apache-2.0
+# Copyright (C) 2026 GoodAncestor
 """Reference-genotype resolver: for trait rsIDs absent from the variant callset,
 confirm homozygous-reference status using (1) 23andMe array 0/0 calls and
 (2) Complete Genomics reference blocks. Emits the plus-strand hom-ref genotype.

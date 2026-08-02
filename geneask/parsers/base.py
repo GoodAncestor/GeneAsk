@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright (C) 2026 GoodAncestor
 """Consumer-genotype file parsers — base types.
 
 A parser turns a vendor raw-data export into a stream of normalized

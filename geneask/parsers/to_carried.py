@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright (C) 2026 GoodAncestor
 """Turn parsed array genotypes into carried-variant records — panel-anchored.
 
 Array data gives (chrom, pos, allele1, allele2) but no REF/ALT. The ClinVar

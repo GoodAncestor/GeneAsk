@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright (C) 2026 GoodAncestor
 """Living DNA raw export. TAB-delimited despite a .csv extension. Columns rsid,
 chrom, pos, genotype (concatenated). Detection: 'Living DNA' in the first line.
 Build 37, forward strand. No-call = '--'. IDs may be AX-/AFFX-prefixed or CHR:POS

@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright (C) 2026 GoodAncestor
 """AlphaMissense annotator — local mirror of precomputed missense pathogenicity.
 
 AlphaMissense scores (nearly) every possible missense substitution in the human

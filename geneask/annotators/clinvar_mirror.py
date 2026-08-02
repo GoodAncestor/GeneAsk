@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright (C) 2026 GoodAncestor
 """Full ClinVar annotator — local mirror of the weekly GRCh38 VCF.
 
 Replaces the bundled 157-gene panel with the complete ClinVar set (~4.2M

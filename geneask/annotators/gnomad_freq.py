@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright (C) 2026 GoodAncestor
 """gnomAD allele-frequency enrichment — per-variant, cached (no bulk mirror).
 
 gnomAD is terabytes; mirroring it is the wrong design for a consumer report that

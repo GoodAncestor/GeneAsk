@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright (C) 2026 GoodAncestor
 """Compare a person's genome across multiple tests/platforms.
 
 The "do my tests agree?" feature: given a multi-sample VCF where each sample is

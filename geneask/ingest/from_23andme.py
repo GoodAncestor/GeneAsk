@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+# SPDX-License-Identifier: Apache-2.0
+# Copyright (C) 2026 GoodAncestor
 """23andMe raw genotype -> VCF, anchoring REF to a reference FASTA.
 
 23andMe format: rsid, chromosome, position, genotype  (plus-strand oriented).
