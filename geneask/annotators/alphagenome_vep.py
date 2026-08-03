@@ -14,8 +14,19 @@ on a possibly-public site):
     never bundled. No key -> every function is a no-op. This is also the license
     boundary: the non-commercial constraint travels with the KEY, not this code.
   - opt-in: does nothing unless ALPHAGENOME_ENABLED is truthy AND a key is set.
-  - per-report cap (ALPHAGENOME_MAX_VARIANTS, default 10): only the top-N
-    uncertain variants are ever scored, so one report can't drain the quota.
+  - paced, with a time budget rather than a variant cap. AlphaGenome publishes no
+    quota at all, on purpose — their team's own answer is that limits are
+    "regularly changed based on our available resources", and their advice for
+    finding the ceiling is to increase load until you see RESOURCE_EXHAUSTED. So
+    any fixed daily number here would be superstition. We ask at a modest rate
+    (ALPHAGENOME_MAX_PER_MINUTE, default 20), bound how long one report will wait
+    (ALPHAGENOME_TIME_BUDGET_S, default 60 — each call is ~1s plus download, and
+    this runs on the inline path), and treat RESOURCE_EXHAUSTED as the real
+    signal: stop for the rest of the run, and don't cache the non-answer.
+  - ALPHAGENOME_MAX_VARIANTS still exists but defaults to unset. It is a hard
+    ceiling for when you want one, not the everyday control — capping at an
+    arbitrary N truncates a big report for reasons that have nothing to do with
+    the upstream and does so identically at two reports a day and at two thousand.
   - disk cache keyed by variant: a variant is scored at most once, ever.
 Enrichment only — it annotates existing findings, it is not a finding source.
 """
@@ -26,9 +37,12 @@ from pathlib import Path
 _KEY_ENV = "ALPHA_GENOME_KEY"
 _ENABLED_ENV = "ALPHAGENOME_ENABLED"
 _CACHE_ENV = "ALPHAGENOME_CACHE_DB"
-_MAX_ENV = "ALPHAGENOME_MAX_VARIANTS"
+_MAX_ENV = "ALPHAGENOME_MAX_VARIANTS"       # hard ceiling; unset by default
+_RATE_ENV = "ALPHAGENOME_MAX_PER_MINUTE"
+_TIME_ENV = "ALPHAGENOME_TIME_BUDGET_S"
 _DEFAULT_CACHE = os.path.expanduser("~/.cache/geneask/alphagenome.db")
-_DEFAULT_MAX = 10
+_DEFAULT_RATE = 20
+_DEFAULT_TIME_BUDGET = 60.0
 # interval width centered on the variant; 100KB is enough for local regulatory
 # context and far cheaper than the 1MB max.
 _SEQ_LEN = 131072
@@ -74,7 +88,61 @@ def _recommended_scorers():
     return scorers[:20]
 
 
-def score_variant(variant_id: str, api_key: str, cache_db: str | None = None) -> dict | None:
+def _is_resource_exhausted(exc: Exception) -> bool:
+    """AlphaGenome's 'you are asking too fast'. Detected structurally where the
+    gRPC status is available and by message otherwise, because the client wraps
+    errors differently across versions and the whole point of this check is that
+    it must not go stale and silently start ignoring the one signal they give us."""
+    code = getattr(exc, "code", None)
+    try:
+        if callable(code) and getattr(code(), "name", "") == "RESOURCE_EXHAUSTED":
+            return True
+    except Exception:
+        pass
+    return "resource_exhausted" in f"{type(exc).__name__} {exc}".lower()
+
+
+class Pacing:
+    """Rate + patience for one report, plus whether AlphaGenome told us to stop."""
+
+    def __init__(self, limiter=None, deadline=None, max_variants: int | None = None):
+        self.limiter = limiter
+        self.deadline = deadline
+        self.max_variants = max_variants
+        self.halted = False
+        self.spent = 0
+
+    def acquire(self) -> bool:
+        if self.halted:
+            return False
+        if self.deadline is not None and self.deadline.expired():
+            return False
+        if self.limiter is not None and not self.limiter.acquire(self.deadline):
+            return False
+        return True
+
+    def halt(self) -> None:
+        self.halted = True
+
+
+def default_pacing(cache_db: str | None = None) -> Pacing:
+    """Pacing from the environment. The rate counter shares the cache database so
+    the app's two uvicorn workers hold one allowance between them, not one each."""
+    from biocore.net.pace import RateLimiter, Deadline
+    def _num(env, default, cast):
+        try:
+            v = os.environ.get(env)
+            return cast(v) if v not in (None, "") else default
+        except (TypeError, ValueError):
+            return default
+    return Pacing(limiter=RateLimiter(_cache_path(cache_db), "alphagenome",
+                                      _num(_RATE_ENV, _DEFAULT_RATE, int)),
+                  deadline=Deadline(_num(_TIME_ENV, _DEFAULT_TIME_BUDGET, float)),
+                  max_variants=_num(_MAX_ENV, None, int))
+
+
+def score_variant(variant_id: str, api_key: str, cache_db: str | None = None,
+                  pacing: "Pacing | None" = None) -> dict | None:
     """Score one variant's regulatory effect. Returns a small summary dict
     {variant_id, top_modality, max_abs_score, n_tracks} or None. Cached on disk."""
     parsed = _parse_vid(variant_id)
@@ -86,6 +154,11 @@ def score_variant(variant_id: str, api_key: str, cache_db: str | None = None) ->
         row = con.execute("SELECT summary FROM ag WHERE variant_id=?", (variant_id,)).fetchone()
         if row is not None:
             return json.loads(row[0]) if row[0] else None
+        if pacing is not None and not pacing.acquire():
+            return None    # not asked, so not known to be absent — do not cache
+        if pacing is not None:
+            pacing.spent += 1   # count the attempt: a call that fails still cost
+                                # them the request
         chrom, pos, ref, alt = parsed
         summary = None
         try:
@@ -114,7 +187,13 @@ def score_variant(variant_id: str, api_key: str, cache_db: str | None = None) ->
                                "quantile_score": round(q, 3),
                                "direction": "increase" if q > 0 else "decrease",
                                "n_tracks": int(len(df))}
-        except Exception:
+        except Exception as e:
+            # RESOURCE_EXHAUSTED is the only quota signal AlphaGenome gives, since
+            # they publish no number. Treat it as "stop for this run" rather than
+            # one more failed variant, and never cache it: it says nothing about
+            # the variant.
+            if pacing is not None and _is_resource_exhausted(e):
+                pacing.halt()
             return None    # API/library error: don't cache, allow a later retry
         con.execute("INSERT OR REPLACE INTO ag VALUES (?,?)",
                     (variant_id, json.dumps(summary) if summary else ""))
@@ -131,23 +210,29 @@ def _is_uncertain(f) -> bool:
     return ("uncertain" in sig) or ("conflicting" in sig)
 
 
-def annotate_findings(findings, cache_db: str | None = None) -> int:
-    """Score the top-N uncertain variant findings and attach the predicted
-    regulatory effect in place. No-op unless enabled + key present. Returns count."""
+def annotate_findings(findings, cache_db: str | None = None,
+                      pacing: "Pacing | None" = None) -> int:
+    """Score the uncertain variant findings and attach the predicted regulatory
+    effect in place. No-op unless enabled + key present. Returns count.
+
+    Pass a pacing object to inspect afterwards whether the run was cut short by
+    the time budget or by AlphaGenome itself."""
     if not _enabled():
         return 0
     api_key = os.environ.get(_KEY_ENV)
-    try:
-        max_n = int(os.environ.get(_MAX_ENV, _DEFAULT_MAX))
-    except ValueError:
-        max_n = _DEFAULT_MAX
+    if pacing is None:
+        pacing = default_pacing(cache_db)
     # candidates: variant-id markers that are uncertain/non-catalogued
     cands = [f for f in findings
-             if _parse_vid(f.marker or "") is not None and _is_uncertain(f)][:max_n]
+             if _parse_vid(f.marker or "") is not None and _is_uncertain(f)]
+    if pacing.max_variants:
+        cands = cands[:pacing.max_variants]
     n = 0
     for f in cands:
-        s = score_variant(f.marker, api_key, cache_db=cache_db)
+        s = score_variant(f.marker, api_key, cache_db=cache_db, pacing=pacing)
         if not s:
+            if pacing.halted:
+                break     # they said stop; the rest of the loop is just noise
             continue
         if f.detail is None:
             f.detail = {}

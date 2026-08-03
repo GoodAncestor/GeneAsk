@@ -12,16 +12,27 @@ not a standalone finding source.
 **This is somebody else's rate-limited API, called from a public endpoint.** One
 report annotates every variant finding it has, and a genome full of rare variants
 misses the cache on nearly all of them, so the live-call count per report is
-bounded by the report, not by us. Two limits therefore apply, both per report:
+bounded by the report, not by us.
 
-  - GNOMAD_MAX_LOOKUPS (default 50) caps live calls. Cache hits are free and
-    don't count — the cap is on what we ask Broad for, not on what we answer.
-  - A 429 stops the rest of the run outright rather than continuing into a
-    limiter that is already saying no. Before this a 429 looked exactly like
-    "variant unknown", was not cached (correctly), and so every later report
-    retried the same variants into the same wall.
+We pace instead of capping. gnomAD publishes its limit in its own server code
+(broadinstitute/gnomad-browser): 30 requests per calendar minute per client IP,
+and the `variant` field we query costs 1 of the 300-per-minute cost budget. There
+is no daily quota. So a report may make as many lookups as it likes provided it
+makes them at that rate — a flat per-report cap would truncate a big report at a
+number unrelated to anything upstream, and would do it just as hard at two reports
+a day as at two thousand.
 
-Findings past the cap keep their cached AF where there is one and simply go
+  - GNOMAD_MAX_PER_MINUTE (default 25, against their 30) is the rate, held in
+    SQLite so the app's two uvicorn workers share one allowance — the limit is per
+    IP, and an in-process counter would let each worker spend all of it.
+  - GNOMAD_TIME_BUDGET_S (default 45) bounds how long ONE report will wait for
+    that rate. This is a page-latency decision, not a quota one.
+  - A 429 stops the run outright rather than continuing into a limiter that is
+    already saying no. Before this a 429 looked exactly like "variant unknown",
+    was not cached (correctly), and so every later report retried the same
+    variants into the same wall.
+
+Findings past the deadline keep their cached AF where there is one and simply go
 un-annotated otherwise; nothing fails, and status is reported by the caller.
 
 Data: gnomAD (Broad Institute), https://gnomad.broadinstitute.org/api
@@ -32,27 +43,53 @@ from pathlib import Path
 
 _API = "https://gnomad.broadinstitute.org/api"
 _CACHE_ENV = "GNOMAD_CACHE_DB"
-_MAX_ENV = "GNOMAD_MAX_LOOKUPS"
-_DEFAULT_MAX = 50
+_RATE_ENV = "GNOMAD_MAX_PER_MINUTE"
+_TIME_ENV = "GNOMAD_TIME_BUDGET_S"
+# Their enforced limit is 30/min per IP; 25 leaves room for anything else on this
+# address (the sibling uvicorn worker's own SQLite view, a retry in flight).
+_DEFAULT_RATE = 25
+_DEFAULT_TIME_BUDGET = 45.0
 _DEFAULT_CACHE = os.path.expanduser("~/.cache/geneask/gnomad_af.db")
 
 
 class LiveBudget:
-    """How many live API calls this report may still make. Shared by every lookup
-    in one run; `halted` is the 429 circuit-breaker, which is separate from simple
-    exhaustion so the caller can tell 'we stopped asking' from 'they stopped
-    answering'."""
+    """One report's allowance of live gnomAD calls — a rate and a waiting time,
+    not a count.
 
-    def __init__(self, limit: int):
-        self.remaining = max(0, limit)
+    `halted` is the 429 circuit-breaker and is deliberately distinct from running
+    out of deadline: the caller needs to tell "we stopped asking" from "they
+    stopped answering", because only the second is a fact about gnomAD.
+
+    A limit of 0 (or a None limiter) means 'never call out', which is what the
+    tests and any offline caller want."""
+
+    def __init__(self, limit: int | None = None, limiter=None, deadline=None):
+        # `limit` is the legacy count form, kept because it is the clearest way to
+        # express "no live calls at all" and to pin behaviour in tests.
+        self.remaining = limit if limit is not None else -1   # -1 = uncounted
+        self.limiter = limiter
+        self.deadline = deadline
         self.halted = False
         self.spent = 0
 
     def allows(self) -> bool:
-        return self.remaining > 0 and not self.halted
+        """Cheap pre-check: is a live call permitted at all? Does not reserve the
+        slot — acquire() does that, because the wait belongs next to the call."""
+        if self.halted or self.remaining == 0:
+            return False
+        return not (self.deadline is not None and self.deadline.expired())
+
+    def acquire(self) -> bool:
+        """Reserve one live call, waiting for the rate if needed."""
+        if not self.allows():
+            return False
+        if self.limiter is not None and not self.limiter.acquire(self.deadline):
+            return False      # the wait would outlast this report's patience
+        return True
 
     def spend(self) -> None:
-        self.remaining -= 1
+        if self.remaining > 0:
+            self.remaining -= 1
         self.spent += 1
 
     def halt(self) -> None:
@@ -96,7 +133,7 @@ def allele_frequency(variant_id: str, dataset: str = "gnomad_r4",
         row = con.execute("SELECT af FROM af WHERE variant_id=?", (variant_id,)).fetchone()
         if row is not None:
             return None if row[0] < 0 else row[0]
-        if budget is not None and not budget.allows():
+        if budget is not None and not budget.acquire():
             return None
         af = None
         try:
@@ -128,13 +165,22 @@ def allele_frequency(variant_id: str, dataset: str = "gnomad_r4",
         con.close()
 
 
-def default_budget() -> LiveBudget:
-    """One report's allowance of live gnomAD calls, from GNOMAD_MAX_LOOKUPS."""
-    try:
-        limit = int(os.environ.get(_MAX_ENV, _DEFAULT_MAX))
-    except ValueError:
-        limit = _DEFAULT_MAX
-    return LiveBudget(limit)
+def default_budget(cache_db: str | None = None) -> LiveBudget:
+    """One report's allowance: gnomAD's published rate, and this report's patience.
+
+    The rate counter lives in the AF cache database because that file is already
+    mounted into every process that makes these calls — which is what makes the
+    allowance shared rather than per-process."""
+    from biocore.net.pace import RateLimiter, Deadline
+    def _num(env, default, cast):
+        try:
+            return cast(os.environ.get(env, default))
+        except (TypeError, ValueError):
+            return default
+    rate = _num(_RATE_ENV, _DEFAULT_RATE, int)
+    seconds = _num(_TIME_ENV, _DEFAULT_TIME_BUDGET, float)
+    return LiveBudget(limiter=RateLimiter(_cache_path(cache_db), "gnomad", rate),
+                      deadline=Deadline(seconds))
 
 
 def annotate_findings(findings, cache_db: str | None = None,
@@ -147,7 +193,7 @@ def annotate_findings(findings, cache_db: str | None = None,
     Pass a budget to inspect afterwards how much of the allowance a report used,
     or whether gnomAD rate-limited it; omit it for the default per-report cap."""
     if budget is None:
-        budget = default_budget()
+        budget = default_budget(cache_db)
     n = 0
     for f in findings:
         m = f.marker or ""
