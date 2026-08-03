@@ -28,6 +28,15 @@ def _lo():
     return LiftOver(str(_CHAIN))
 
 
+def liftover_available() -> bool:
+    """Whether liftover can run at all, as distinct from a coordinate failing to
+    lift. Both produce zero matches for a build-37 upload, but they are different
+    facts: 'this position has no GRCh38 equivalent' is about the data, while
+    'pyliftover is missing' is about this install. Callers must say which, or a
+    broken deployment reads to the user as a clean genome."""
+    return _lo() is not None
+
+
 def lift_37_to_38(chrom: str, pos: int):
     """Lift a 1-based GRCh37 (chrom, pos) to GRCh38. Returns (chrom, pos) with no
     'chr' prefix, or None if unliftable / liftover unavailable. pyliftover uses

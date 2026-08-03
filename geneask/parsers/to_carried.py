@@ -113,11 +113,23 @@ def carried_from_parse(parsed: ParseResult, panel: dict,
 
     # surface what we did, so the report can note it rather than silently 0-match
     if build == "37":
-        note = f"input build GRCh37: lifted to GRCh38 ({lifted_used} sites"
-        if unliftable:
-            note += f", {unliftable} unliftable"
-        note += ") before ClinVar matching"
-        parsed.notes.append(note)
+        from .lift import liftover_available
+        if not liftover_available():
+            # Every site "unliftable" for the same reason is not a fact about the
+            # genome. Without this the note reads "0 sites lifted, 700000
+            # unliftable" and a build-37 upload looks like a person with no ClinVar
+            # findings, which is the most dangerous way for this to fail.
+            parsed.notes.append(
+                "input build GRCh37 but liftover is UNAVAILABLE on this server "
+                "(pyliftover or the hg19ToHg38 chain is missing) — no GRCh38 "
+                "ClinVar site could be matched; this is a server fault, not a "
+                "result about your genome")
+        else:
+            note = f"input build GRCh37: lifted to GRCh38 ({lifted_used} sites"
+            if unliftable:
+                note += f", {unliftable} unliftable"
+            note += ") before ClinVar matching"
+            parsed.notes.append(note)
     elif build == "unknown":
         parsed.notes.append("input build unknown: matched at GRCh38 and, where that "
                             "missed, at lifted GRCh37->38 coordinates")
