@@ -1,0 +1,49 @@
+# Tell the images to rebuild when this engine changes.
+#
+# The app image (DNA-Report) and the worker image (dna-report-deploy) both
+# resolve this repo from `main` at pip-install time during their builds. So a
+# change here alters both images while touching neither repo — and until this
+# workflow existed, neither rebuilt. The result was silent version skew: on
+# 2026-08-03 the worker image predated a bio-core change, and queued reports
+# rendered with an older renderer than inline ones, with nothing anywhere saying
+# so.
+#
+# This only fires a rebuild. The payload carries no build input, and neither
+# target workflow reads `client_payload`, so there is no path from this event to
+# what gets built — both always resolve their dependencies from main.
+name: notify-images
+on:
+  push:
+    branches: [main]
+  workflow_dispatch: {}
+
+jobs:
+  dispatch:
+    runs-on: ubuntu-latest
+    strategy:
+      # one target must not be able to fail the other: a rebuilt app image with a
+      # stale worker image is exactly the skew this exists to prevent, so each is
+      # reported independently rather than short-circuiting.
+      fail-fast: false
+      matrix:
+        target: [DNA-Report, dna-report-deploy]
+    steps:
+      - name: Request a rebuild
+        env:
+          # a fine-grained PAT with Contents: Read and write on the two target
+          # repos. Contents, not Actions — GitHub classes repository_dispatch as
+          # a Contents:write operation, which reads wrong but is what the API
+          # enforces. GITHUB_TOKEN cannot do this at all: it is scoped to this
+          # repo only and cannot dispatch to a sibling.
+          GH_TOKEN: ${{ secrets.ENGINE_DISPATCH_TOKEN }}
+          TARGET: ${{ matrix.target }}
+        run: |
+          set -euo pipefail
+          if [ -z "${GH_TOKEN}" ]; then
+            echo "ENGINE_DISPATCH_TOKEN is not set — images will NOT rebuild for this push."
+            echo "That is the silent-skew failure this workflow exists to prevent, so fail loudly."
+            exit 1
+          fi
+          gh api "repos/GoodAncestor/${TARGET}/dispatches" \
+            -f event_type=engine-updated
+          echo "requested rebuild: ${TARGET}"
