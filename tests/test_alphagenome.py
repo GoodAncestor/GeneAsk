@@ -76,6 +76,9 @@ def test_quota_exhaustion_stops_the_run_and_caches_nothing(tmp_path, monkeypatch
         Variant=lambda **k: None, Interval=lambda **k: None)
     sys.modules["alphagenome.models"].variant_scorers = types.SimpleNamespace(
         RECOMMENDED_VARIANT_SCORERS={}, tidy_scores=lambda s: None)
+    # client_available() imports this name; without it the stub reads as "package
+    # not installed" and the run would stop for the wrong reason.
+    sys.modules["alphagenome.models"].dna_client = types.SimpleNamespace(create=lambda k: None)
     calls = []
     def boom(api_key):
         calls.append(api_key)
@@ -102,3 +105,19 @@ def test_no_variant_cap_by_default(monkeypatch):
     assert default_pacing(":memory:").max_variants is None
     monkeypatch.setenv("ALPHAGENOME_MAX_VARIANTS", "3")
     assert default_pacing(":memory:").max_variants == 3
+
+
+def test_missing_client_is_surfaced_not_swallowed(monkeypatch):
+    """score_variant catches every exception so one bad variant can't fail a
+    report — which also swallows ImportError. With the feature switched ON and the
+    vendor package absent, that made a deployment fault look identical to "no
+    regulatory effects found". It must be reported instead."""
+    import geneask.annotators.alphagenome_vep as ag
+    monkeypatch.setenv("ALPHAGENOME_ENABLED", "1")
+    monkeypatch.setenv("ALPHA_GENOME_KEY", "x")
+    monkeypatch.setattr(ag, "client_available", lambda: False)
+    p = ag.Pacing()
+    fs = [Finding("1-1-A-G", "clinvar", "d", Tier.SPECULATIVE, [Category.CLINICAL],
+                  detail={"clinical_significance": "Uncertain significance"})]
+    assert ag.annotate_findings(fs, pacing=p) == 0
+    assert p.client_missing and p.spent == 0    # flagged, and no slot wasted

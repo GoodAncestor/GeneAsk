@@ -53,6 +53,24 @@ def _enabled() -> bool:
         os.environ.get(_ENABLED_ENV, "").lower() in ("1", "true", "yes", "on")
 
 
+def client_available() -> bool:
+    """Whether the vendor client is importable at all.
+
+    This is checked separately from `_enabled()` because the two failures look
+    identical from outside and mean opposite things. `score_variant` catches every
+    exception and returns None so one bad variant cannot fail a report — which
+    also silently swallows `ImportError`. So an install with the feature switched
+    ON and the library absent scores nothing, reports nothing, and is
+    indistinguishable from a report whose variants simply had no regulatory
+    effect. The package is an optional extra (`geneask[alphagenome]`), so that is
+    a live configuration mistake, not a hypothetical one."""
+    try:
+        from alphagenome.models import dna_client  # noqa: F401
+        return True
+    except Exception:
+        return False
+
+
 def _cache_con(path: str):
     Path(path).parent.mkdir(parents=True, exist_ok=True)
     con = sqlite3.connect(path)
@@ -111,6 +129,10 @@ class Pacing:
         self.max_variants = max_variants
         self.halted = False
         self.spent = 0
+        # set when the feature is switched on but the vendor client is missing —
+        # a deployment fault, and one the caller should say out loud rather than
+        # letting it read as "no regulatory effects found"
+        self.client_missing = False
 
     def acquire(self) -> bool:
         if self.halted:
@@ -222,6 +244,12 @@ def annotate_findings(findings, cache_db: str | None = None,
     api_key = os.environ.get(_KEY_ENV)
     if pacing is None:
         pacing = default_pacing(cache_db)
+    if not client_available():
+        # Checked once here rather than discovered per variant, because per
+        # variant it is caught and discarded. Return before spending a rate slot
+        # on a call that cannot be made.
+        pacing.client_missing = True
+        return 0
     # candidates: variant-id markers that are uncertain/non-catalogued
     cands = [f for f in findings
              if _parse_vid(f.marker or "") is not None and _is_uncertain(f)]
