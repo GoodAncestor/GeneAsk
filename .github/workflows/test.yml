@@ -1,0 +1,40 @@
+# Run this engine's tests before it tells the images to rebuild.
+#
+# A push here changes the app and worker images without touching either of their
+# repos — that is what notify-images.yml exists to propagate. So this repo is the
+# last place a break can be caught cheaply: after the dispatch, the cost of a bad
+# commit is a published image and a user-visible deploy to replace it.
+#
+# notify-images waits on this job. A red suite therefore stops the rebuild rather
+# than shipping into it.
+#
+# No step interpolates event data into a shell command — push and dispatch events
+# both carry attacker-influencable text, and the only safe amount of that in a
+# `run:` block is none.
+name: test
+on:
+  pull_request: {}
+  workflow_dispatch: {}
+  workflow_call: {}
+
+permissions:
+  contents: read
+
+jobs:
+  pytest:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'    # matches the runtime image
+      # A REAL install from the declared dependencies, not a PYTHONPATH trick.
+      # The failures this was written after were environment drift rather than
+      # logic — a venv missing pyliftover made every build-37 upload silently
+      # match nothing, and read as a code bug.
+      - name: Install
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e . pytest
+      - name: Run tests
+        run: pytest -q

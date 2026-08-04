@@ -18,7 +18,14 @@ on:
   workflow_dispatch: {}
 
 jobs:
+  # Run this engine's own tests first. A push here republishes both images
+  # without touching either of their repos, so a red suite must stop the
+  # dispatch rather than ship into it.
+  test:
+    uses: ./.github/workflows/test.yml
+
   dispatch:
+    needs: test
     runs-on: ubuntu-latest
     strategy:
       # one target must not be able to fail the other: a rebuilt app image with a
