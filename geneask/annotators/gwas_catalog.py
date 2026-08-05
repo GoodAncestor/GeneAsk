@@ -12,6 +12,7 @@ Data: NHGRI-EBI GWAS Catalog, CC BY 4.0. Bulk associations download:
 """
 from __future__ import annotations
 import os, io, sqlite3, zipfile, urllib.request
+import threading as _threading
 from pathlib import Path
 from biocore.providers.base import Finding, Tier, Category, ProviderStatus, Health
 
@@ -110,27 +111,75 @@ def build_mirror(db_path: str | None = None, workdir: str | None = None,
     return {"source": "gwas_catalog", "associations": n, "db": db}
 
 
+# One connection per thread, reused. Opening a fresh sqlite3.connect() per lookup
+# is what made the array path quadratic in practice: a consumer export carries
+# ~650k rsIDs, so the caller paid a connect/schema-load/close for each one, and
+# the connection churn — not the indexed query — was the cost. Connections are
+# not safe to share between threads, and the web front door now runs analysis in
+# a threadpool, so the cache is thread-local rather than a module global.
+_conns = _threading.local()
+
+
+def _conn(db: str):
+    cache = getattr(_conns, "by_path", None)
+    if cache is None:
+        cache = _conns.by_path = {}
+    con = cache.get(db)
+    if con is None:
+        con = sqlite3.connect(db)
+        con.row_factory = sqlite3.Row
+        cache[db] = con
+    return con
+
+
+# SQLite's default parameter ceiling is 999; stay under it with room to spare.
+_CHUNK = 900
+
+
+def mirror_lookup_many(rsids, db_path: str | None = None) -> dict:
+    """{rsid: [row, ...]} for many rsIDs in a handful of queries.
+
+    The single-rsid entry point below is kept for callers with one variant in
+    hand, but anything iterating a whole callset should come through here: it is
+    the difference between one query per SNP and one per 900.
+    """
+    db = _db_path(db_path)
+    if not Path(db).exists():
+        return {}
+    wanted = sorted({r for r in rsids if r})
+    if not wanted:
+        return {}
+    out: dict[str, list] = {}
+    con = _conn(db)
+    try:
+        for i in range(0, len(wanted), _CHUNK):
+            chunk = wanted[i:i + _CHUNK]
+            q = ("SELECT * FROM assoc WHERE rsid IN (%s)"
+                 % ",".join("?" * len(chunk)))
+            for r in con.execute(q, chunk):
+                out.setdefault(r["rsid"], []).append(dict(r))
+    except sqlite3.OperationalError:
+        return {}
+    return out
+
+
 def mirror_lookup(rsid: str, db_path: str | None = None) -> list[dict]:
     db = _db_path(db_path)
     if not Path(db).exists():
         return []
-    con = sqlite3.connect(db)
-    con.row_factory = sqlite3.Row
     try:
-        rows = con.execute("SELECT * FROM assoc WHERE rsid=?", (rsid,)).fetchall()
+        rows = _conn(db).execute(
+            "SELECT * FROM assoc WHERE rsid=?", (rsid,)).fetchall()
     except sqlite3.OperationalError:
         return []
-    finally:
-        con.close()
     return [dict(r) for r in rows]
 
 
-def findings_for(rsid: str, carried_alleles: set | None = None,
-                 db_path: str | None = None) -> list[Finding]:
-    """GWAS trait-association Findings for a carried rsID. If carried_alleles is
-    given, note whether the person carries the risk allele."""
+def findings_from_rows(rsid: str, rows, carried_alleles: set | None = None) -> list:
+    """Build Findings from already-fetched mirror rows, so a caller that batched
+    its lookups does not have to go back to the database per rsID."""
     out = []
-    for row in mirror_lookup(rsid, db_path):
+    for row in rows:
         trait = row.get("mapped_trait") or row.get("trait") or "trait"
         ra = row.get("risk_allele") or ""
         carries = (ra in carried_alleles) if (carried_alleles and ra) else None
@@ -150,3 +199,14 @@ def findings_for(rsid: str, carried_alleles: set | None = None,
             link=f"https://www.ebi.ac.uk/gwas/variants/{rsid}",
             pmids=[str(row["pmid"])] if row.get("pmid") else []))
     return out
+
+
+def findings_for(rsid: str, carried_alleles: set | None = None,
+                 db_path: str | None = None) -> list[Finding]:
+    """GWAS trait-association Findings for a carried rsID. If carried_alleles is
+    given, note whether the person carries the risk allele.
+
+    Convenience for a caller holding one variant. Anything walking a whole
+    callset should use mirror_lookup_many() + findings_from_rows() instead.
+    """
+    return findings_from_rows(rsid, mirror_lookup(rsid, db_path), carried_alleles)

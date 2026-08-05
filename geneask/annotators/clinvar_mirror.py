@@ -114,10 +114,55 @@ def build_mirror(db_path: str | None = None, workdir: str | None = None,
     return {"source": "clinvar_full", "variants": n, "db": db}
 
 
+def _as_index(rows) -> dict:
+    return {r["variant_id"]: {
+        "gene": r["gene"], "clinical_significance": r["clinical_significance"],
+        "review_status": r["review_status"], "gold_stars": r["gold_stars"],
+        "clinvar_variation_id": r["clinvar_variation_id"]} for r in rows}
+
+
+# SQLite's default parameter ceiling is 999; stay under it with room to spare.
+_CHUNK = 900
+
+
+def lookup_from_mirror(variant_ids, db_path: str | None = None) -> dict | None:
+    """Index only the variants asked for: {variant_id: {...}} for those present.
+
+    variant_id is the table's PRIMARY KEY, so these are index seeks. Returns None
+    — not an empty dict — when there is no mirror, so the caller can tell "no
+    mirror, fall back to the bundled panel" from "mirror present, nothing
+    matched", which are opposite outcomes.
+    """
+    db = _db_path(db_path)
+    if not Path(db).exists():
+        return None
+    wanted = sorted({v for v in variant_ids if v})
+    if not wanted:
+        return {}
+    con = sqlite3.connect(db)
+    con.row_factory = sqlite3.Row
+    out = {}
+    try:
+        for i in range(0, len(wanted), _CHUNK):
+            chunk = wanted[i:i + _CHUNK]
+            q = ("SELECT * FROM variants WHERE variant_id IN (%s)"
+                 % ",".join("?" * len(chunk)))
+            out.update(_as_index(con.execute(q, chunk)))
+    except sqlite3.OperationalError:
+        return None
+    finally:
+        con.close()
+    return out
+
+
 def load_panel_from_mirror(db_path: str | None = None) -> dict | None:
-    """Return an index shaped like clinvar_screen.index_by_variant_id():
-    {variant_id: {gene, clinical_significance, review_status, gold_stars, ...}}.
-    None if the mirror hasn't been built (caller falls back to the bundled panel)."""
+    """The whole mirror as one index, or None if it hasn't been built.
+
+    This materialises ~4.2M rows into a dict — several seconds of CPU and
+    multiple GB of memory. Screening one person's callset needs a few thousand of
+    those rows, so that path uses lookup_from_mirror() instead; this remains for
+    tools that genuinely want the entire set, and for the CLI.
+    """
     db = _db_path(db_path)
     if not Path(db).exists():
         return None
@@ -129,7 +174,4 @@ def load_panel_from_mirror(db_path: str | None = None) -> dict | None:
         return None
     finally:
         con.close()
-    return {r["variant_id"]: {
-        "gene": r["gene"], "clinical_significance": r["clinical_significance"],
-        "review_status": r["review_status"], "gold_stars": r["gold_stars"],
-        "clinvar_variation_id": r["clinvar_variation_id"]} for r in rows}
+    return _as_index(rows)

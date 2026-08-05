@@ -47,19 +47,30 @@ def load_panel(path: str | None = None) -> dict:
         return json.load(fh)
 
 
-def index_by_variant_id(panel: dict) -> dict:
+def index_by_variant_id(panel: dict, wanted=None) -> dict:
     """Flatten to {variant_id: {gene, **variant_record}} keyed on 'chrom-pos-ref-alt'
     (GRCh38, matching the callset key).
 
     Prefers the FULL ClinVar mirror when a worker has built it (CLINVAR_MIRROR_DB):
     the complete ~4.2M-variant set replaces the bundled 157-gene panel as a drop-in.
     Falls back to flattening the bundled panel when no mirror exists.
+
+    `wanted` is the set of variant_ids the caller will actually look up. Given
+    one, only those rows are read: screening a callset against the mirror used to
+    pull all ~4.2M rows into memory to answer a few thousand questions, which
+    cost seconds of CPU and gigabytes of RSS on every single report.
     """
     try:
-        from ..annotators.clinvar_mirror import load_panel_from_mirror
-        full = load_panel_from_mirror()
-        if full:
-            return full
+        if wanted is not None:
+            from ..annotators.clinvar_mirror import lookup_from_mirror
+            hit = lookup_from_mirror(wanted)
+            if hit is not None:       # None means no mirror; {} means no matches
+                return hit
+        else:
+            from ..annotators.clinvar_mirror import load_panel_from_mirror
+            full = load_panel_from_mirror()
+            if full:
+                return full
     except Exception:
         pass
     idx = {}
@@ -100,8 +111,21 @@ def screen_findings(carried_variant_ids: list[dict], panel: dict | None = None) 
     carried_variant_ids entries: {variant_id: 'chr-pos-ref-alt', genotype, platform}.
     Returns CLINICAL Findings for pathogenic/likely-pathogenic panel hits only.
     """
-    panel = panel if panel is not None else load_panel()
-    idx = index_by_variant_id(panel)
+    wanted = {v.get("variant_id") for v in carried_variant_ids}
+    # Ask the mirror first and only fall back to the bundled panel if there
+    # isn't one. Loading the panel up front meant every report on a mirrored
+    # box gunzipped and JSON-parsed 393,806 variants and then discarded them,
+    # because the mirror superseded the result.
+    idx = None
+    if panel is None:
+        try:
+            from ..annotators.clinvar_mirror import lookup_from_mirror
+            idx = lookup_from_mirror(wanted)      # None when no mirror exists
+        except Exception:
+            idx = None
+    if idx is None:
+        idx = index_by_variant_id(panel if panel is not None else load_panel(),
+                                  wanted=wanted)
     findings = []
     for v in carried_variant_ids:
         rec = idx.get(v.get("variant_id"))
