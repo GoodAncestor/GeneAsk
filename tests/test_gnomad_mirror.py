@@ -89,8 +89,11 @@ def test_resumable_across_runs(tmp_path):
     s1 = build_mirror(db_path=db, workdir=str(tmp_path), chroms=["21"])
     assert s1["chroms_built"] == ["21"] and s1["chroms_skipped"] == []
 
-    # delete chr21's source file: if the build touched it again this would raise
-    (tmp_path / "gnomad.genomes.v4.1.sites.chr21.vcf.bgz").unlink()
+    # The build deletes each source file once ingested — chr21 alone is 7.76 GB in
+    # the real release, so keeping them would leave hundreds of GB beside a mirror
+    # of a few dozen. Its absence here is therefore the assertion: chr21 cannot be
+    # re-read on the next run, so the run below must skip it from `progress` alone.
+    assert not (tmp_path / "gnomad.genomes.v4.1.sites.chr21.vcf.bgz").exists()
 
     s2 = build_mirror(db_path=db, workdir=str(tmp_path), chroms=["21", "22"])
     assert s2["chroms_skipped"] == ["21"]

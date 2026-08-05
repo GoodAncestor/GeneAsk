@@ -29,7 +29,7 @@ Data: gnomAD (Broad Institute), public GRCh38 sites VCFs.
   https://gnomad.broadinstitute.org/downloads
 """
 from __future__ import annotations
-import os, gzip, sqlite3, urllib.request
+import contextlib, os, gzip, sqlite3, urllib.request
 from pathlib import Path
 
 _URL_TMPL = ("https://storage.googleapis.com/gcp-public-data--gnomad/release/"
@@ -184,7 +184,18 @@ def build_mirror(db_path: str | None = None, workdir: str | None = None,
         vcf = wd / f"gnomad.genomes.v4.1.sites.chr{chrom}.vcf.bgz"
         _download(chrom, vcf)
         remaining = (cap - total_new) if cap is not None else None
-        n = _ingest_chrom(con, vcf, remaining)
+        try:
+            n = _ingest_chrom(con, vcf, remaining)
+        finally:
+            # Drop each chromosome's VCF as soon as it is ingested. They are only
+            # ever read once, and keeping them is not a small waste: chr21 alone is
+            # 7.76 GB compressed, so a full 24-chromosome run would leave several
+            # hundred GB of source files sitting next to a mirror of a few dozen.
+            # Deleting bounds the build to one chromosome file plus the database.
+            # Safe for resumption either way — a chromosome is re-downloaded unless
+            # it was recorded complete.
+            with contextlib.suppress(OSError):
+                vcf.unlink()
         total_new += n
         if cap is not None and total_new >= cap:
             # this chromosome was cut short by the cap: its rows are in `af`
