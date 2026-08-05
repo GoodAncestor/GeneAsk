@@ -1,13 +1,25 @@
 # SPDX-License-Identifier: Apache-2.0
 # Copyright (C) 2026 GoodAncestor
-"""gnomAD allele-frequency enrichment — per-variant, cached (no bulk mirror).
+"""gnomAD allele-frequency enrichment — mirror-first, live API as a fallback.
 
-gnomAD is terabytes; mirroring it is the wrong design for a consumer report that
-only touches the handful of variants a person actually carries. Instead we query
-the gnomAD GraphQL API per variant and cache the answer on disk, so the second
-lookup of any variant is instant and offline. AF reframes a scary ClinVar hit
-("35% of people carry this") — an enrichment layered onto existing findings,
-not a standalone finding source.
+Originally per-variant live GraphQL, paced and time-boxed (see the budget
+machinery below), on the theory that gnomAD is terabytes and mirroring the
+whole thing is the wrong design for a report that only touches the handful of
+variants one person carries. Measured consequence: a report with 3,947 variant
+findings got AF for 82 of them — whichever the loop reached before the 45s
+budget ran out, a silently different 82 every run. That is an undisclosed
+sample on a health report, not an engineering tradeoff worth keeping.
+
+gnomad_mirror.py now builds a local SQLite of the same shape as the cache table
+below (variant_id -> AF, -1.0 = known absent) from gnomAD's public sites VCFs.
+When that mirror exists, allele_frequency() answers from it exclusively: no
+rate limiter, no time budget, no live call, hit or miss. The live path below —
+budget, rate limiter, 429 circuit breaker, disk cache — stays intact and is
+still exactly what runs on a box where the mirror hasn't been built yet
+(refresh:gnomad hasn't run, or hasn't finished its first chromosome), so nothing
+regresses before the mirror exists. AF reframes a scary ClinVar hit ("35% of
+people carry this") — an enrichment layered onto existing findings, not a
+standalone finding source.
 
 **This is somebody else's rate-limited API, called from a public endpoint.** One
 report annotates every variant finding it has, and a genome full of rare variants
@@ -43,6 +55,7 @@ from pathlib import Path
 
 _API = "https://gnomad.broadinstitute.org/api"
 _CACHE_ENV = "GNOMAD_CACHE_DB"
+_MIRROR_ENV = "GNOMAD_MIRROR_DB"
 _RATE_ENV = "GNOMAD_MAX_PER_MINUTE"
 _TIME_ENV = "GNOMAD_TIME_BUDGET_S"
 # Their enforced limit is 30/min per IP; 25 leaves room for anything else on this
@@ -112,6 +125,45 @@ def _cache_con(path: str):
     return con
 
 
+def _mirror_path(explicit: str | None = None) -> str:
+    if explicit:
+        return explicit
+    if os.environ.get(_MIRROR_ENV):
+        return os.environ[_MIRROR_ENV]
+    from geneask.annotators.gnomad_mirror import _DEFAULT_DB
+    return _DEFAULT_DB
+
+
+# SQLite's default parameter ceiling is 999; stay under it with room to spare
+# (same limit clinvar_mirror.lookup_from_mirror works around, for the same reason).
+_MIRROR_CHUNK = 900
+
+
+def _mirror_lookup_many(variant_ids, mirror_db: str) -> dict:
+    """{variant_id: af} for every id the mirror has an AF row for, af<0 excluded
+    (that means 'looked up during the build and confirmed absent from gnomAD',
+    which is indistinguishable from 'not asked about' to a caller that only
+    wants a number to annotate with)."""
+    wanted = sorted({v for v in variant_ids if v})
+    if not wanted:
+        return {}
+    con = sqlite3.connect(mirror_db)
+    out = {}
+    try:
+        for i in range(0, len(wanted), _MIRROR_CHUNK):
+            chunk = wanted[i:i + _MIRROR_CHUNK]
+            q = ("SELECT variant_id, af FROM af WHERE variant_id IN (%s)"
+                 % ",".join("?" * len(chunk)))
+            for vid, af in con.execute(q, chunk):
+                if af is not None and af >= 0:
+                    out[vid] = af
+    except sqlite3.OperationalError:
+        return {}
+    finally:
+        con.close()
+    return out
+
+
 def _to_gnomad_id(variant_id: str) -> str:
     """'chrom-pos-ref-alt' is already gnomAD's variantId shape (chr prefix stripped)."""
     return variant_id[3:] if variant_id.lower().startswith("chr") else variant_id
@@ -119,14 +171,28 @@ def _to_gnomad_id(variant_id: str) -> str:
 
 def allele_frequency(variant_id: str, dataset: str = "gnomad_r4",
                      cache_db: str | None = None, timeout: int = 20,
-                     budget: "LiveBudget | None" = None) -> float | None:
-    """Population allele frequency for 'chrom-pos-ref-alt' (GRCh38). Cached on disk;
-    returns the max of genome/exome AF, or None if unknown / API unreachable.
+                     budget: "LiveBudget | None" = None,
+                     mirror_db: str | None = None) -> float | None:
+    """Population allele frequency for 'chrom-pos-ref-alt' (GRCh38).
+
+    Mirror-first: if GNOMAD_MIRROR_DB (or mirror_db) exists on disk, the answer
+    comes from it exclusively — hit or miss, no live call, no rate limiter, no
+    budget spent. A mirror is built to cover the whole genome, so a miss against
+    a mirror that exists means "gnomAD doesn't have this variant", not "we ran
+    out of time to ask" — the two rate/budget knobs below exist only for a box
+    that has no mirror yet, where they still mean exactly what they used to.
+
+    Without a mirror, falls back to the original per-variant live GraphQL call,
+    cached on disk so the second lookup of any variant is instant and offline.
     A cached None (miss) is stored as -1.0 so we don't re-hit the API for it.
 
     With a budget, a cache miss that has no allowance left returns None WITHOUT
     calling out and without caching — the answer is unknown to us, not known to be
     absent, and caching it would poison the variant permanently."""
+    mirror = _mirror_path(mirror_db)
+    if Path(mirror).exists():
+        hits = _mirror_lookup_many([variant_id], mirror)
+        return hits.get(variant_id)
     cache = _cache_path(cache_db)
     con = _cache_con(cache)
     try:
@@ -184,23 +250,48 @@ def default_budget(cache_db: str | None = None) -> LiveBudget:
 
 
 def annotate_findings(findings, cache_db: str | None = None,
-                      budget: "LiveBudget | None" = None):
+                      budget: "LiveBudget | None" = None,
+                      mirror_db: str | None = None):
     """Attach population AF to each finding whose marker is a 'chrom-pos-ref-alt'
     variant id, in place: sets f.detail['gnomad_af'] and appends a plain-language
     frequency note to the description. Findings whose marker isn't a variant id
     (CpG probes, rsIDs) are left untouched. Returns the count annotated.
 
-    Pass a budget to inspect afterwards how much of the allowance a report used,
-    or whether gnomAD rate-limited it; omit it for the default per-report cap."""
+    Mirror-first, same rule as allele_frequency(): when the mirror exists this
+    is ONE chunked SQLite query for every variant marker in `findings`, and no
+    rate limiter or budget applies — the number of findings a report can afford
+    to annotate stops being bounded by a 45-second clock. Pass a budget to
+    inspect afterwards how much of the live allowance a report used (only
+    consulted on a box with no mirror); omit it for the default per-report cap."""
+    mirror = _mirror_path(mirror_db)
+    markers = [f.marker or "" for f in findings]
+    variant_markers = [m for m in markers if len(m.split("-")) == 4 and m.split("-")[1].isdigit()]
+
+    if Path(mirror).exists():
+        hits = _mirror_lookup_many(variant_markers, mirror)
+        n = 0
+        for f, m in zip(findings, markers):
+            af = hits.get(m)
+            if af is None:
+                continue
+            if f.detail is None:
+                f.detail = {}
+            f.detail["gnomad_af"] = af
+            pct = af * 100
+            freq = (f"{pct:.1f}% of people" if pct >= 0.1
+                    else f"~{pct:.3f}% of people (rare)")
+            f.description = f"{f.description} — carried by {freq} (gnomAD)"
+            n += 1
+        return n
+
     if budget is None:
         budget = default_budget(cache_db)
+    variant_marker_set = set(variant_markers)
     n = 0
-    for f in findings:
-        m = f.marker or ""
-        parts = m.split("-")
-        if len(parts) != 4 or not parts[1].isdigit():
+    for f, m in zip(findings, markers):
+        if m not in variant_marker_set:
             continue    # not a chrom-pos-ref-alt variant id
-        af = allele_frequency(m, cache_db=cache_db, budget=budget)
+        af = allele_frequency(m, cache_db=cache_db, budget=budget, mirror_db=mirror_db)
         if af is None:
             continue
         if f.detail is None:
