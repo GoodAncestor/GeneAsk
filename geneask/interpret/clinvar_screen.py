@@ -19,6 +19,7 @@ presented as robust.
 from __future__ import annotations
 import gzip, json
 from pathlib import Path
+from urllib.parse import quote
 from biocore.providers.base import Finding, Tier, Category
 
 _PANEL = Path(__file__).resolve().parents[1] / "data" / "reference" / "clinvar_panel_157genes.json.gz"
@@ -94,6 +95,26 @@ def _abbrev_allele(geno: str, keep: int = 8) -> str:
     return "/".join(short(a) for a in geno.split("/"))
 
 
+def _record_link(variation_id, gene: str) -> str | None:
+    """Deep link to the variant's own ClinVar record.
+
+    Both the bundled panel and the full mirror carry `clinvar_variation_id`, so
+    a finding almost always resolves to one page. Without it, fall back to a
+    gene-scoped search rather than the ClinVar homepage — a reader shown a
+    pathogenic call needs somewhere to check the submitters and the review
+    status, and the homepage is not that. The fallback deliberately avoids a
+    /variation/ URL so a gene-level guess can never be mistaken for the variant's
+    own record.
+    """
+    vid = str(variation_id or "").strip()
+    if vid:
+        return f"https://www.ncbi.nlm.nih.gov/clinvar/variation/{quote(vid)}/"
+    g = (gene or "").strip()
+    if g and g != "?":
+        return f"https://www.ncbi.nlm.nih.gov/clinvar/?term={quote(g)}%5Bgene%5D"
+    return None
+
+
 def _tier_from_review(sig: str, gold_stars: int) -> Tier:
     sig = (sig or "").lower()
     if "conflicting" in sig:
@@ -144,13 +165,21 @@ def screen_findings(carried_variant_ids: list[dict], panel: dict | None = None) 
         # a cancer-predisposition gene -> topic cancer, else generic clinical
         topic = "cancer" if gene in _CANCER_GENES else "clinical"
         geno = _abbrev_allele(v.get("genotype", "?"))
+        vid = rec.get("clinvar_variation_id")
         findings.append(Finding(
             marker=v.get("variant_id", "?"), source="clinvar_panel_157",
             description=f"{gene}: {rec.get('clinical_significance', sig)}"
                         f" (genotype {geno}, {v.get('platform','?')})",
             tier=tier, categories=[Category.CLINICAL],
+            # the record itself, not the ClinVar homepage: bio-core's renderer
+            # uses `f.link or SOURCES['clinvar'].url`, so leaving this unset sent
+            # every clinical finding in a genome report to the same generic page.
+            link=_record_link(vid, gene),
             detail={"gene": gene, "topic": topic, "modality": "genome",
                     "clinical_significance": rec.get("clinical_significance", sig),
                     "review_status": rec.get("review_status"),
+                    # carried so JSON/MCP consumers resolve the record directly
+                    # instead of parsing it back out of the link
+                    "clinvar_variation_id": vid,
                     "gold_stars": stars, "platform": v.get("platform")}))
     return findings
