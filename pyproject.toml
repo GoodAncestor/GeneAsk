@@ -27,4 +27,7 @@ include = ["geneask*"]
 
 [tool.setuptools.package-data]
 "geneask" = ["data/reference/*.json.gz", "data/reference/*.json", "data/reference/*.csv",
-             "data/reference/chains/*.chain.gz"]
+             "data/reference/chains/*.chain.gz",
+             # reviewed copy tables the composers read (2026-09-02); a non-editable
+             # install without them fails every ClinVar interpretation
+             "data/copy/*.json"]
