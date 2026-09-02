@@ -13,13 +13,20 @@ from geneask.annotators import clinvar_mirror as cm
 def mirror(tmp_path, monkeypatch):
     db = tmp_path / "clinvar.db"
     con = sqlite3.connect(db)
+    con.execute("CREATE TABLE meta(key TEXT PRIMARY KEY, value TEXT)")
+    con.execute("INSERT INTO meta VALUES ('schema_version', '2')")
     con.execute("""CREATE TABLE variants(
         variant_id TEXT PRIMARY KEY, clinvar_variation_id TEXT, gene TEXT,
-        clinical_significance TEXT, review_status TEXT, gold_stars INTEGER)""")
-    con.executemany("INSERT INTO variants VALUES (?,?,?,?,?,?)", [
-        ("1-100-A-G", "v1", "BRCA1", "Pathogenic", "reviewed by expert panel", 3),
-        ("2-200-C-T", "v2", "MTHFR", "Benign", "criteria provided", 1),
-        ("3-300-G-A", "v3", "TP53", "Likely pathogenic", "criteria provided", 2),
+        clinical_significance TEXT, review_status TEXT, gold_stars INTEGER,
+        conditions TEXT, condition_ids TEXT, molecular_consequence TEXT,
+        origin TEXT, allele_id TEXT)""")
+    con.executemany("INSERT INTO variants VALUES (?,?,?,?,?,?,?,?,?,?,?)", [
+        ("1-100-A-G", "v1", "BRCA1", "Pathogenic", "reviewed by expert panel", 3,
+         "[]", "[]", None, "[]", None),
+        ("2-200-C-T", "v2", "MTHFR", "Benign", "criteria provided", 1,
+         "[]", "[]", None, "[]", None),
+        ("3-300-G-A", "v3", "TP53", "Likely pathogenic", "criteria provided", 2,
+         "[]", "[]", None, "[]", None),
     ])
     con.commit()
     con.close()

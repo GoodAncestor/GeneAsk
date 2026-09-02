@@ -48,12 +48,16 @@ def test_mirror_backed_findings_link_to_the_record_too(tmp_path, monkeypatch):
     import sqlite3
     db = tmp_path / "clinvar.db"
     con = sqlite3.connect(db)
+    con.execute("CREATE TABLE meta(key TEXT PRIMARY KEY, value TEXT)")
+    con.execute("INSERT INTO meta VALUES ('schema_version', '2')")
     con.execute("""CREATE TABLE variants(
         variant_id TEXT PRIMARY KEY, clinvar_variation_id TEXT, gene TEXT,
-        clinical_significance TEXT, review_status TEXT, gold_stars INTEGER)""")
-    con.execute("INSERT INTO variants VALUES (?,?,?,?,?,?)",
+        clinical_significance TEXT, review_status TEXT, gold_stars INTEGER,
+        conditions TEXT, condition_ids TEXT, molecular_consequence TEXT,
+        origin TEXT, allele_id TEXT)""")
+    con.execute("INSERT INTO variants VALUES (?,?,?,?,?,?,?,?,?,?,?)",
                 ("13-32340301-A-G", "51062", "BRCA2", "Pathogenic",
-                 "reviewed by expert panel", 3))
+                 "reviewed by expert panel", 3, "[]", "[]", None, "[]", None))
     con.commit()
     con.close()
     monkeypatch.setenv("CLINVAR_MIRROR_DB", str(db))

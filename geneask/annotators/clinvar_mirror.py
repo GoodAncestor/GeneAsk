@@ -13,12 +13,24 @@ Data: NCBI ClinVar, public domain.
   https://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh38/clinvar.vcf.gz
 """
 from __future__ import annotations
+import json
 import os, re, gzip, sqlite3, urllib.request
 from pathlib import Path
+
+from biocore.providers.base import Health, ProviderStatus
 
 _URL = "https://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh38/clinvar.vcf.gz"
 _DB_ENV = "CLINVAR_MIRROR_DB"
 _DEFAULT_DB = "/data/clinvar/clinvar_mirror.db"
+SCHEMA_VERSION = "2"
+
+# ClinVar's VCF header defines ORIGIN as this bitmask.
+_ORIGIN_BITS = [
+    (1, "germline"), (2, "somatic"), (4, "inherited"), (8, "paternal"),
+    (16, "maternal"), (32, "de novo"), (64, "biparental"),
+    (128, "uniparental"), (256, "not tested"),
+    (512, "tested inconclusive"), (1073741824, "other"),
+]
 
 # ClinVar review status -> gold stars (the ClinVar star model).
 _STARS = {
@@ -57,6 +69,49 @@ def _gene(geneinfo: str) -> str:
     return geneinfo.split(":")[0].split("|")[0]
 
 
+def _origin(raw: str) -> list[str]:
+    try:
+        value = int(raw)
+    except (TypeError, ValueError):
+        return []
+    return [label for bit, label in _ORIGIN_BITS if value & bit]
+
+
+def _clean(value: str) -> str:
+    # ClinVar escapes spaces as '_' and commas as '%2C' in INFO values.
+    return value.replace("_", " ").replace("%2C", ",").strip()
+
+
+def _usable_condition(name: str) -> bool:
+    return bool(name) and name.lower() not in ("not provided", "not specified")
+
+
+def _conditions(clndn: str) -> list[str]:
+    names = [_clean(name) for name in (clndn or "").split("|")]
+    return [name for name in names if _usable_condition(name)]
+
+
+def _condition_ids(clndisdb: str, clndn: str = "") -> list[str]:
+    """Return ids for named conditions and omit ids for placeholder groups."""
+    name_groups = [_clean(name) for name in (clndn or "").split("|")]
+    out = []
+    for index, group in enumerate((clndisdb or "").split("|")):
+        if index < len(name_groups) and not _usable_condition(name_groups[index]):
+            continue
+        for ref in group.split(","):
+            ref = ref.strip()
+            if ref and ref != "." and ":" in ref:
+                out.append(ref)
+    return out
+
+
+def _consequence(mc: str) -> str | None:
+    # MC may list several SO id and term pairs. Keep the first term.
+    first = (mc or "").split(",")[0]
+    term = first.split("|")[-1].strip() if first else ""
+    return term or None
+
+
 def build_mirror(db_path: str | None = None, workdir: str | None = None,
                  max_rows: int | None = None) -> dict:
     """Download the ClinVar GRCh38 VCF and build a SQLite keyed by variant_id.
@@ -78,9 +133,14 @@ def build_mirror(db_path: str | None = None, workdir: str | None = None,
 
     con = sqlite3.connect(db)
     con.execute("DROP TABLE IF EXISTS variants")
+    con.execute("DROP TABLE IF EXISTS meta")
+    con.execute("CREATE TABLE meta(key TEXT PRIMARY KEY, value TEXT)")
+    con.execute("INSERT INTO meta VALUES ('schema_version', ?)", (SCHEMA_VERSION,))
     con.execute("""CREATE TABLE variants(
         variant_id TEXT PRIMARY KEY, clinvar_variation_id TEXT, gene TEXT,
-        clinical_significance TEXT, review_status TEXT, gold_stars INTEGER)""")
+        clinical_significance TEXT, review_status TEXT, gold_stars INTEGER,
+        conditions TEXT, condition_ids TEXT, molecular_consequence TEXT,
+        origin TEXT, allele_id TEXT)""")
     n = 0
     rows = []
     with gzip.open(vcf, "rt", encoding="utf-8", errors="replace") as fh:
@@ -100,15 +160,27 @@ def build_mirror(db_path: str | None = None, workdir: str | None = None,
             revstat = info.get("CLNREVSTAT", "")
             variant_id = f"{chrom}-{pos}-{ref}-{alt}"
             rows.append((variant_id, vid, _gene(info.get("GENEINFO", "")),
-                         clnsig, revstat.replace("_", " "), _stars(revstat)))
+                         clnsig, revstat.replace("_", " "), _stars(revstat),
+                         json.dumps(_conditions(info.get("CLNDN", ""))),
+                         json.dumps(_condition_ids(info.get("CLNDISDB", ""),
+                                                   info.get("CLNDN", ""))),
+                         _consequence(info.get("MC", "")),
+                         json.dumps(_origin(info.get("ORIGIN", ""))),
+                         info.get("ALLELEID") or None))
             n += 1
             if len(rows) >= 5000:
-                con.executemany("INSERT OR REPLACE INTO variants VALUES (?,?,?,?,?,?)", rows)
+                con.executemany(
+                    "INSERT OR REPLACE INTO variants VALUES (?,?,?,?,?,?,?,?,?,?,?)",
+                    rows,
+                )
                 rows = []
             if max_rows and n >= max_rows:
                 break
         if rows:
-            con.executemany("INSERT OR REPLACE INTO variants VALUES (?,?,?,?,?,?)", rows)
+            con.executemany(
+                "INSERT OR REPLACE INTO variants VALUES (?,?,?,?,?,?,?,?,?,?,?)",
+                rows,
+            )
     con.commit()
     con.close()
     return {"source": "clinvar_full", "variants": n, "db": db}
@@ -118,7 +190,46 @@ def _as_index(rows) -> dict:
     return {r["variant_id"]: {
         "gene": r["gene"], "clinical_significance": r["clinical_significance"],
         "review_status": r["review_status"], "gold_stars": r["gold_stars"],
-        "clinvar_variation_id": r["clinvar_variation_id"]} for r in rows}
+        "clinvar_variation_id": r["clinvar_variation_id"],
+        "conditions": json.loads(r["conditions"] or "[]"),
+        "condition_ids": json.loads(r["condition_ids"] or "[]"),
+        "molecular_consequence": r["molecular_consequence"],
+        "origin": json.loads(r["origin"] or "[]"),
+        "allele_id": r["allele_id"]} for r in rows}
+
+
+def _schema_ok(con) -> bool:
+    try:
+        row = con.execute(
+            "SELECT value FROM meta WHERE key='schema_version'"
+        ).fetchone()
+    except sqlite3.OperationalError:
+        return False
+    return bool(row) and str(row[0]) == SCHEMA_VERSION
+
+
+def mirror_status(db_path: str | None = None) -> ProviderStatus:
+    """Return the health of the mirror stored on disk."""
+    db = _db_path(db_path)
+    if not Path(db).exists():
+        return ProviderStatus(
+            name="clinvar_mirror", health=Health.UNAVAILABLE,
+            note="Build the ClinVar mirror before using it.",
+        )
+    con = sqlite3.connect(db)
+    try:
+        if not _schema_ok(con):
+            return ProviderStatus(
+                name="clinvar_mirror", health=Health.UNAVAILABLE,
+                note=f"ClinVar mirror schema v{SCHEMA_VERSION} requires a rebuild.",
+            )
+        count = con.execute("SELECT COUNT(*) FROM variants").fetchone()[0]
+    finally:
+        con.close()
+    return ProviderStatus(
+        name="clinvar_mirror", health=Health.OK,
+        version=f"schema {SCHEMA_VERSION}", record_count=count,
+    )
 
 
 # SQLite's default parameter ceiling is 999; stay under it with room to spare.
@@ -141,6 +252,9 @@ def lookup_from_mirror(variant_ids, db_path: str | None = None) -> dict | None:
         return {}
     con = sqlite3.connect(db)
     con.row_factory = sqlite3.Row
+    if not _schema_ok(con):
+        con.close()
+        return None
     out = {}
     try:
         for i in range(0, len(wanted), _CHUNK):
@@ -168,6 +282,9 @@ def load_panel_from_mirror(db_path: str | None = None) -> dict | None:
         return None
     con = sqlite3.connect(db)
     con.row_factory = sqlite3.Row
+    if not _schema_ok(con):
+        con.close()
+        return None
     try:
         rows = con.execute("SELECT * FROM variants").fetchall()
     except sqlite3.OperationalError:
