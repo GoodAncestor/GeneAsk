@@ -30,7 +30,7 @@ def test_v2_rows_keep_counts_and_populations(tmp_path):
     row = rows["13-32316419-CAG-C"]
     assert row["af"] == 0.0000032 and row["ac"] == 5
     assert row["an"] == 1560000 and row["nhomalt"] == 0
-    assert row["populations"] == {"nfe": 0.0000041, "afr": 0.0}
+    assert row["populations"] == {"nfe": 0.0000041, "afr": 0.0, "grpmax": 0.0000041}   # sex-split and joint keys are not kept
     row2 = rows["13-32316500-A-T"]
     assert row2["ac"] == 20 and row2["nhomalt"] == 2
     assert row2["populations"]["nfe"] == 0.21
