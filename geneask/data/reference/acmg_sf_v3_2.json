@@ -1,0 +1,416 @@
+{
+ "version": "1",
+ "list_version": "SF v3.2",
+ "retrieved_on": "2026-09-02",
+ "source": "https://www.ncbi.nlm.nih.gov/clinvar/docs/acmg/",
+ "inheritance_source": "PMID:37347242",
+ "reviewed_by": [],
+ "reviewed_on": null,
+ "rows": {
+  "APC": {
+   "condition": "Familial adenomatous polyposis",
+   "inheritance": "dominant",
+   "note": ""
+  },
+  "MYH11": {
+   "condition": "Familial thoracic aortic aneurysm",
+   "inheritance": "dominant",
+   "note": ""
+  },
+  "ACTA2": {
+   "condition": "Familial thoracic aortic aneurysm",
+   "inheritance": "dominant",
+   "note": ""
+  },
+  "TMEM43": {
+   "condition": "Arrhythmogenic right ventricular cardiomyopathy",
+   "inheritance": "dominant",
+   "note": ""
+  },
+  "DSP": {
+   "condition": "Arrhythmogenic right ventricular cardiomyopathy",
+   "inheritance": "dominant",
+   "note": ""
+  },
+  "PKP2": {
+   "condition": "Arrhythmogenic right ventricular cardiomyopathy",
+   "inheritance": "dominant",
+   "note": ""
+  },
+  "DSG2": {
+   "condition": "Arrhythmogenic right ventricular cardiomyopathy",
+   "inheritance": "dominant",
+   "note": ""
+  },
+  "DSC2": {
+   "condition": "Arrhythmogenic right ventricular cardiomyopathy",
+   "inheritance": "dominant",
+   "note": ""
+  },
+  "BTD": {
+   "condition": "Biotinidase deficiency",
+   "inheritance": "recessive",
+   "note": ""
+  },
+  "BRCA1": {
+   "condition": "Hereditary breast and ovarian cancer syndrome",
+   "inheritance": "dominant",
+   "note": ""
+  },
+  "BRCA2": {
+   "condition": "Hereditary breast and ovarian cancer syndrome",
+   "inheritance": "dominant",
+   "note": ""
+  },
+  "SCN5A": {
+   "condition": "Brugada syndrome",
+   "inheritance": "dominant",
+   "note": ""
+  },
+  "RYR2": {
+   "condition": "Catecholaminergic polymorphic ventricular tachycardia",
+   "inheritance": "dominant",
+   "note": ""
+  },
+  "CASQ2": {
+   "condition": "Catecholaminergic polymorphic ventricular tachycardia",
+   "inheritance": "recessive",
+   "note": ""
+  },
+  "CALM1": {
+   "condition": "Catecholaminergic polymorphic ventricular tachycardia",
+   "inheritance": "dominant",
+   "note": ""
+  },
+  "TRDN": {
+   "condition": "Catecholaminergic polymorphic ventricular tachycardia",
+   "inheritance": "recessive",
+   "note": ""
+  },
+  "FLNC": {
+   "condition": "Dilated cardiomyopathy",
+   "inheritance": "dominant",
+   "note": ""
+  },
+  "LMNA": {
+   "condition": "Dilated cardiomyopathy",
+   "inheritance": "dominant",
+   "note": ""
+  },
+  "TNNT2": {
+   "condition": "Dilated cardiomyopathy",
+   "inheritance": "dominant",
+   "note": ""
+  },
+  "DES": {
+   "condition": "Dilated cardiomyopathy",
+   "inheritance": "dominant",
+   "note": ""
+  },
+  "MYH7": {
+   "condition": "Dilated cardiomyopathy",
+   "inheritance": "dominant",
+   "note": ""
+  },
+  "TNNC1": {
+   "condition": "Dilated cardiomyopathy",
+   "inheritance": "dominant",
+   "note": ""
+  },
+  "RBM20": {
+   "condition": "Dilated cardiomyopathy",
+   "inheritance": "dominant",
+   "note": ""
+  },
+  "BAG3": {
+   "condition": "Dilated cardiomyopathy",
+   "inheritance": "dominant",
+   "note": ""
+  },
+  "TTN": {
+   "condition": "Dilated cardiomyopathy",
+   "inheritance": "dominant",
+   "note": "truncating variants only"
+  },
+  "COL3A1": {
+   "condition": "Vascular Ehlers-Danlos syndrome",
+   "inheritance": "dominant",
+   "note": ""
+  },
+  "GLA": {
+   "condition": "Fabry disease",
+   "inheritance": "x_linked",
+   "note": ""
+  },
+  "LDLR": {
+   "condition": "Familial hypercholesterolemia",
+   "inheritance": "dominant",
+   "note": ""
+  },
+  "APOB": {
+   "condition": "Familial hypercholesterolemia",
+   "inheritance": "dominant",
+   "note": ""
+  },
+  "TPM1": {
+   "condition": "Hypertrophic cardiomyopathy",
+   "inheritance": "dominant",
+   "note": ""
+  },
+  "MYBPC3": {
+   "condition": "Hypertrophic cardiomyopathy",
+   "inheritance": "dominant",
+   "note": ""
+  },
+  "PRKAG2": {
+   "condition": "Hypertrophic cardiomyopathy",
+   "inheritance": "dominant",
+   "note": ""
+  },
+  "TNNI3": {
+   "condition": "Hypertrophic cardiomyopathy",
+   "inheritance": "dominant",
+   "note": ""
+  },
+  "MYL3": {
+   "condition": "Hypertrophic cardiomyopathy",
+   "inheritance": "dominant",
+   "note": ""
+  },
+  "MYL2": {
+   "condition": "Hypertrophic cardiomyopathy",
+   "inheritance": "dominant",
+   "note": ""
+  },
+  "ACTC1": {
+   "condition": "Hypertrophic cardiomyopathy",
+   "inheritance": "dominant",
+   "note": ""
+  },
+  "RET": {
+   "condition": "Multiple endocrine neoplasia type 2",
+   "inheritance": "dominant",
+   "note": ""
+  },
+  "PALB2": {
+   "condition": "Hereditary breast cancer",
+   "inheritance": "dominant",
+   "note": ""
+  },
+  "HFE": {
+   "condition": "Hereditary hemochromatosis",
+   "inheritance": "recessive",
+   "note": "p.Cys282Tyr homozygotes only"
+  },
+  "ENG": {
+   "condition": "Hereditary hemorrhagic telangiectasia",
+   "inheritance": "dominant",
+   "note": ""
+  },
+  "ACVRL1": {
+   "condition": "Hereditary hemorrhagic telangiectasia",
+   "inheritance": "dominant",
+   "note": ""
+  },
+  "SDHD": {
+   "condition": "Hereditary paraganglioma-pheochromocytoma syndrome",
+   "inheritance": "dominant",
+   "note": ""
+  },
+  "SDHB": {
+   "condition": "Hereditary paraganglioma-pheochromocytoma syndrome",
+   "inheritance": "dominant",
+   "note": ""
+  },
+  "TTR": {
+   "condition": "Hereditary transthyretin amyloidosis",
+   "inheritance": "dominant",
+   "note": ""
+  },
+  "PCSK9": {
+   "condition": "Familial hypercholesterolemia",
+   "inheritance": "dominant",
+   "note": ""
+  },
+  "BMPR1A": {
+   "condition": "Juvenile polyposis syndrome",
+   "inheritance": "dominant",
+   "note": ""
+  },
+  "SMAD4": {
+   "condition": "Juvenile polyposis syndrome",
+   "inheritance": "dominant",
+   "note": ""
+  },
+  "TP53": {
+   "condition": "Li-Fraumeni syndrome",
+   "inheritance": "dominant",
+   "note": ""
+  },
+  "TGFBR1": {
+   "condition": "Loeys-Dietz syndrome",
+   "inheritance": "dominant",
+   "note": ""
+  },
+  "TGFBR2": {
+   "condition": "Loeys-Dietz syndrome",
+   "inheritance": "dominant",
+   "note": ""
+  },
+  "SMAD3": {
+   "condition": "Loeys-Dietz syndrome",
+   "inheritance": "dominant",
+   "note": ""
+  },
+  "KCNQ1": {
+   "condition": "Long QT syndrome",
+   "inheritance": "dominant",
+   "note": ""
+  },
+  "KCNH2": {
+   "condition": "Long QT syndrome",
+   "inheritance": "dominant",
+   "note": ""
+  },
+  "CALM2": {
+   "condition": "Long QT syndrome",
+   "inheritance": "dominant",
+   "note": ""
+  },
+  "CALM3": {
+   "condition": "Long QT syndrome",
+   "inheritance": "dominant",
+   "note": ""
+  },
+  "MSH2": {
+   "condition": "Lynch syndrome",
+   "inheritance": "dominant",
+   "note": ""
+  },
+  "MLH1": {
+   "condition": "Lynch syndrome",
+   "inheritance": "dominant",
+   "note": ""
+  },
+  "PMS2": {
+   "condition": "Lynch syndrome",
+   "inheritance": "dominant",
+   "note": ""
+  },
+  "MSH6": {
+   "condition": "Lynch syndrome",
+   "inheritance": "dominant",
+   "note": ""
+  },
+  "RYR1": {
+   "condition": "Malignant hyperthermia susceptibility",
+   "inheritance": "dominant",
+   "note": ""
+  },
+  "CACNA1S": {
+   "condition": "Malignant hyperthermia susceptibility",
+   "inheritance": "dominant",
+   "note": ""
+  },
+  "FBN1": {
+   "condition": "Marfan syndrome",
+   "inheritance": "dominant",
+   "note": ""
+  },
+  "HNF1A": {
+   "condition": "Maturity-onset diabetes of the young",
+   "inheritance": "dominant",
+   "note": ""
+  },
+  "MEN1": {
+   "condition": "Multiple endocrine neoplasia type 1",
+   "inheritance": "dominant",
+   "note": ""
+  },
+  "MUTYH": {
+   "condition": "MUTYH-associated polyposis",
+   "inheritance": "recessive",
+   "note": ""
+  },
+  "NF2": {
+   "condition": "Neurofibromatosis type 2",
+   "inheritance": "dominant",
+   "note": ""
+  },
+  "OTC": {
+   "condition": "Ornithine transcarbamylase deficiency",
+   "inheritance": "x_linked",
+   "note": ""
+  },
+  "SDHAF2": {
+   "condition": "Hereditary paraganglioma-pheochromocytoma syndrome",
+   "inheritance": "dominant",
+   "note": ""
+  },
+  "SDHC": {
+   "condition": "Hereditary paraganglioma-pheochromocytoma syndrome",
+   "inheritance": "dominant",
+   "note": ""
+  },
+  "STK11": {
+   "condition": "Peutz-Jeghers syndrome",
+   "inheritance": "dominant",
+   "note": ""
+  },
+  "MAX": {
+   "condition": "Hereditary paraganglioma-pheochromocytoma syndrome",
+   "inheritance": "dominant",
+   "note": ""
+  },
+  "TMEM127": {
+   "condition": "Hereditary paraganglioma-pheochromocytoma syndrome",
+   "inheritance": "dominant",
+   "note": ""
+  },
+  "GAA": {
+   "condition": "Pompe disease",
+   "inheritance": "recessive",
+   "note": ""
+  },
+  "PTEN": {
+   "condition": "PTEN hamartoma tumor syndrome",
+   "inheritance": "dominant",
+   "note": ""
+  },
+  "RB1": {
+   "condition": "Retinoblastoma",
+   "inheritance": "dominant",
+   "note": ""
+  },
+  "RPE65": {
+   "condition": "RPE65-related retinopathy",
+   "inheritance": "recessive",
+   "note": ""
+  },
+  "TSC1": {
+   "condition": "Tuberous sclerosis complex",
+   "inheritance": "dominant",
+   "note": ""
+  },
+  "TSC2": {
+   "condition": "Tuberous sclerosis complex",
+   "inheritance": "dominant",
+   "note": ""
+  },
+  "VHL": {
+   "condition": "Von Hippel-Lindau syndrome",
+   "inheritance": "dominant",
+   "note": ""
+  },
+  "WT1": {
+   "condition": "Wilms tumor predisposition",
+   "inheritance": "dominant",
+   "note": ""
+  },
+  "ATP7B": {
+   "condition": "Wilson disease",
+   "inheritance": "recessive",
+   "note": ""
+  }
+ }
+}
