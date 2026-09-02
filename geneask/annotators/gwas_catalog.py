@@ -23,8 +23,9 @@ _DEFAULT_DB = "/data/gwas/gwas_mirror.db"
 SCHEMA_VERSION = "2"
 _LOG = logging.getLogger(__name__)
 
-# Planned alt-full TSV indices. The vendor header was unavailable on 2026-09-02,
-# so these positions remain unverified against the current file.
+# alt-full TSV indices, verified 2026-09-02 against the header of the live
+# download (38 columns; see GoodAncestor projects/dna-report/work/
+# gwas-header-verified-2026-09-02.md).
 _C = {"pubmedid": 1, "trait": 7, "initial_n": 8, "replication_n": 9,
       "chr": 11, "pos": 12, "mapped_gene": 14, "risk_allele": 20,
       "snps": 21, "raf": 26, "pvalue": 27, "pvalue_text": 29,
