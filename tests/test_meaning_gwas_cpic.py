@@ -76,6 +76,6 @@ def test_cpic_names_the_called_diplotype_and_specific_recommendation():
         "Your CYP2C19 type is *1/*2 (Intermediate Metabolizer), called by PharmCAT."
     )
     assert "PharmCAT 3.4.0" in interpretation.how_sure
-    assert "CPIC" in interpretation.how_sure and "level A" in interpretation.how_sure
-    assert "Strong recommendation" in interpretation.next_step
-    assert "clopidogrel" in interpretation.next_step
+    assert "level" not in interpretation.how_sure          # level and score stay in detail
+    assert "prescriber" in interpretation.next_step
+    assert "clopidogrel" in interpretation.can_mean

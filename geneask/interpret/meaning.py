@@ -236,17 +236,14 @@ def interpret_cpic(f: Finding) -> Interpretation:
             found = f"Your {gene} type is {diplotype} ({phenotype}), called by PharmCAT."
         else:
             found = f"The reported {gene} type is {diplotype} ({phenotype})."
-        can = f"CPIC links this phenotype to guidance for {drug}."
-        how_parts = []
-        if source:
-            how_parts.append(f"{source} calls the diplotype.")
-        how_parts.append(f"CPIC rates this gene-drug guidance at level {level}.")
-        if d.get("activity_score") is not None:
-            how_parts.append(f"PharmCAT reports an activity score of {d['activity_score']:g}.")
-        how = " ".join(how_parts)
-        classification = str(d.get("classification") or "").strip()
-        strength = f"{classification} recommendation" if classification else "recommendation"
-        nxt = f"Ask a prescriber or pharmacist about CPIC's {strength} for {drug}."
+        # The recommendation itself is the one sentence a person can act on.
+        # Level, activity score and caller version stay in detail for the drawer.
+        rec = " ".join(str(d.get("recommendation") or "").split())
+        if len(rec) > 260:
+            rec = rec[:257].rsplit(" ", 1)[0] + "…"
+        can = f"For {drug}, CPIC says: {rec}" if rec else f"CPIC publishes guidance for {drug} by {gene} type."
+        how = f"Called by {source}." if source else "Reported type."
+        nxt = "Discuss this with your prescriber before changing any treatment."
     else:
         found = (f"You carry a change in {gene}. CPIC publishes prescribing guidance for {drug} "
                  f"by {gene} status.")
