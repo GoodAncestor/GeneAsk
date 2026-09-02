@@ -150,7 +150,8 @@ def test_annotate_findings_mirror_first_bulk_no_budget(tmp_path, monkeypatch):
     n = gnomad_freq.annotate_findings(fs, mirror_db=mirror)
     assert n == 1
     assert fs[0].detail["gnomad_af"] == 0.1
-    assert "10.0% of people" in fs[0].description
+    assert "seen in 10 of 100 sampled chromosomes (gnomAD v4.1)" in fs[0].description
+    assert fs[0].detail["gnomad"]["ac"] == 10
     assert "gnomad_af" not in fs[1].detail
     assert "gnomad_af" not in fs[2].detail
 

@@ -29,8 +29,10 @@ Data: gnomAD (Broad Institute), public GRCh38 sites VCFs.
   https://gnomad.broadinstitute.org/downloads
 """
 from __future__ import annotations
-import contextlib, os, gzip, sqlite3, urllib.request
+import contextlib, json, os, gzip, sqlite3, urllib.request
 from pathlib import Path
+
+from biocore.providers.base import Health, ProviderStatus
 
 _URL_TMPL = ("https://storage.googleapis.com/gcp-public-data--gnomad/release/"
             "4.1/vcf/genomes/gnomad.genomes.v4.1.sites.chr{chrom}.vcf.bgz")
@@ -38,6 +40,11 @@ _DB_ENV = "GNOMAD_MIRROR_DB"
 _DEFAULT_DB = "/data/gnomad/gnomad_mirror.db"
 _CHROMS_ENV = "GNOMAD_MIRROR_CHROMS"     # comma list, for a bounded/testing build
 _MAX_VARIANTS_ENV = "GNOMAD_MIRROR_MAX_VARIANTS"
+SCHEMA_VERSION = "2"
+GNOMAD_VERSION = "v4.1"
+
+# The current vendor header was unavailable on 2026-09-02. Ingestion keeps every
+# AF_* key it encounters, so population coverage does not depend on a fixed list.
 
 # Chromosome order for the (default, unbounded) full build.
 ALL_CHROMS = [str(i) for i in range(1, 23)] + ["X", "Y"]
@@ -67,7 +74,27 @@ def _env_max_variants() -> int | None:
 def _ensure_schema(con: sqlite3.Connection) -> None:
     # IF NOT EXISTS, deliberately not DROP: unlike the single-file mirrors, a
     # resumed build must keep whatever earlier chromosomes already wrote.
-    con.execute("CREATE TABLE IF NOT EXISTS af(variant_id TEXT PRIMARY KEY, af REAL)")
+    af_exists = con.execute(
+        "SELECT 1 FROM sqlite_master WHERE type='table' AND name='af'"
+    ).fetchone()
+    if af_exists:
+        columns = {row[1] for row in con.execute("PRAGMA table_info(af)")}
+        expected = {"variant_id", "af", "ac", "an", "nhomalt", "populations"}
+        if not expected.issubset(columns):
+            raise RuntimeError("gnomAD mirror schema v2 requires a rebuild")
+    con.execute("CREATE TABLE IF NOT EXISTS meta(key TEXT PRIMARY KEY, value TEXT)")
+    row = con.execute(
+        "SELECT value FROM meta WHERE key='schema_version'"
+    ).fetchone()
+    if row and str(row[0]) != SCHEMA_VERSION:
+        raise RuntimeError("gnomAD mirror schema v2 requires a rebuild")
+    if not row:
+        con.execute(
+            "INSERT INTO meta VALUES ('schema_version', ?)", (SCHEMA_VERSION,)
+        )
+    con.execute("""CREATE TABLE IF NOT EXISTS af(
+        variant_id TEXT PRIMARY KEY, af REAL, ac INTEGER, an INTEGER,
+        nhomalt INTEGER, populations TEXT)""")
     con.execute("CREATE TABLE IF NOT EXISTS progress("
                 "chrom TEXT PRIMARY KEY, variants INTEGER, done INTEGER)")
 
@@ -84,6 +111,18 @@ def _info(info: str) -> dict:
             k, v = kv.split("=", 1)
             d[k] = v
     return d
+
+
+def _list_value(info: dict, key: str, index: int) -> str | None:
+    values = info.get(key, "").split(",") if key in info else []
+    return values[index] if index < len(values) else None
+
+
+def _integer(value: str | None) -> int | None:
+    try:
+        return int(value) if value not in (None, "", ".") else None
+    except ValueError:
+        return None
 
 
 def _download(chrom: str, dest: Path) -> None:
@@ -131,17 +170,34 @@ def _ingest_chrom(con: sqlite3.Connection, vcf_path: Path, remaining: int | None
                     af = float(af_list[i])
                 except ValueError:
                     continue
-                rows.append((f"{chrom}-{pos}-{ref}-{alt}", af))
+                populations = {}
+                for key in info:
+                    if not key.startswith("AF_"):
+                        continue
+                    raw = _list_value(info, key, i)
+                    try:
+                        populations[key[3:]] = float(raw)
+                    except (TypeError, ValueError):
+                        continue
+                rows.append((
+                    f"{chrom}-{pos}-{ref}-{alt}", af,
+                    _integer(_list_value(info, "AC", i)),
+                    _integer(info.get("AN")),
+                    _integer(_list_value(info, "nhomalt", i)),
+                    json.dumps(populations, sort_keys=True),
+                ))
                 n += 1
                 if remaining is not None and n >= remaining:
                     break
             if remaining is not None and n >= remaining:
                 break
             if len(rows) >= 20000:
-                con.executemany("INSERT OR REPLACE INTO af VALUES (?,?)", rows)
+                con.executemany(
+                    "INSERT OR REPLACE INTO af VALUES (?,?,?,?,?,?)", rows
+                )
                 rows = []
     if rows:
-        con.executemany("INSERT OR REPLACE INTO af VALUES (?,?)", rows)
+        con.executemany("INSERT OR REPLACE INTO af VALUES (?,?,?,?,?,?)", rows)
     return n
 
 
@@ -188,7 +244,7 @@ def build_mirror(db_path: str | None = None, workdir: str | None = None,
             n = _ingest_chrom(con, vcf, remaining)
         finally:
             # Drop each chromosome's VCF as soon as it is ingested. They are only
-            # ever read once, and keeping them is not a small waste: chr21 alone is
+            # ever read once, and keeping them wastes substantial space. Chr21 is
             # 7.76 GB compressed, so a full 24-chromosome run would leave several
             # hundred GB of source files sitting next to a mirror of a few dozen.
             # Deleting bounds the build to one chromosome file plus the database.
@@ -213,3 +269,74 @@ def build_mirror(db_path: str | None = None, workdir: str | None = None,
 
 def mirror_available(db_path: str | None = None) -> bool:
     return Path(_db_path(db_path)).exists()
+
+
+def _schema_ok(con: sqlite3.Connection) -> bool:
+    try:
+        row = con.execute(
+            "SELECT value FROM meta WHERE key='schema_version'"
+        ).fetchone()
+        columns = {item[1] for item in con.execute("PRAGMA table_info(af)")}
+    except sqlite3.OperationalError:
+        return False
+    expected = {"variant_id", "af", "ac", "an", "nhomalt", "populations"}
+    return bool(row) and str(row[0]) == SCHEMA_VERSION and expected.issubset(columns)
+
+
+def lookup_many(variant_ids, db_path: str | None = None) -> dict:
+    """Return schema-v2 frequency records for the requested variant ids."""
+    db = _db_path(db_path)
+    if not Path(db).exists():
+        return {}
+    wanted = sorted({variant_id for variant_id in variant_ids if variant_id})
+    if not wanted:
+        return {}
+    con = sqlite3.connect(db)
+    con.row_factory = sqlite3.Row
+    try:
+        if not _schema_ok(con):
+            return {}
+        out = {}
+        for start in range(0, len(wanted), 900):
+            chunk = wanted[start:start + 900]
+            query = "SELECT * FROM af WHERE variant_id IN (%s)" % ",".join(
+                "?" * len(chunk)
+            )
+            for row in con.execute(query, chunk):
+                if row["af"] is None or row["af"] < 0:
+                    continue
+                out[row["variant_id"]] = {
+                    "af": row["af"], "ac": row["ac"], "an": row["an"],
+                    "nhomalt": row["nhomalt"],
+                    "populations": json.loads(row["populations"] or "{}"),
+                    "version": GNOMAD_VERSION,
+                }
+        return out
+    except sqlite3.OperationalError:
+        return {}
+    finally:
+        con.close()
+
+
+def mirror_status(db_path: str | None = None) -> ProviderStatus:
+    """Return the health of the gnomAD mirror stored on disk."""
+    db = _db_path(db_path)
+    if not Path(db).exists():
+        return ProviderStatus(
+            name="gnomad_mirror", health=Health.UNAVAILABLE,
+            note="Build the gnomAD mirror before using it.",
+        )
+    con = sqlite3.connect(db)
+    try:
+        if not _schema_ok(con):
+            return ProviderStatus(
+                name="gnomad_mirror", health=Health.UNAVAILABLE,
+                note="gnomAD mirror schema v2 requires a rebuild.",
+            )
+        count = con.execute("SELECT COUNT(*) FROM af").fetchone()[0]
+    finally:
+        con.close()
+    return ProviderStatus(
+        name="gnomad_mirror", health=Health.OK, version=GNOMAD_VERSION,
+        record_count=count,
+    )

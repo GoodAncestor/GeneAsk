@@ -25,7 +25,8 @@ def test_annotate_only_variant_markers(tmp_path):
     n = annotate_findings(fs, cache_db=db)
     assert n == 1
     assert fs[0].detail["gnomad_af"] == 0.35
-    assert "35.0% of people" in fs[0].description
+    assert "allele frequency 0.35 (gnomAD r4)" in fs[0].description
+    assert fs[0].detail["gnomad"]["populations"] == {}
     assert "gnomad_af" not in fs[1].detail    # CpG marker untouched
 
 

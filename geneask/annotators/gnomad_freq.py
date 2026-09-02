@@ -140,28 +140,26 @@ _MIRROR_CHUNK = 900
 
 
 def _mirror_lookup_many(variant_ids, mirror_db: str) -> dict:
-    """{variant_id: af} for every id the mirror has an AF row for, af<0 excluded
-    (that means 'looked up during the build and confirmed absent from gnomAD',
-    which is indistinguishable from 'not asked about' to a caller that only
-    wants a number to annotate with)."""
-    wanted = sorted({v for v in variant_ids if v})
-    if not wanted:
-        return {}
-    con = sqlite3.connect(mirror_db)
-    out = {}
-    try:
-        for i in range(0, len(wanted), _MIRROR_CHUNK):
-            chunk = wanted[i:i + _MIRROR_CHUNK]
-            q = ("SELECT variant_id, af FROM af WHERE variant_id IN (%s)"
-                 % ",".join("?" * len(chunk)))
-            for vid, af in con.execute(q, chunk):
-                if af is not None and af >= 0:
-                    out[vid] = af
-    except sqlite3.OperationalError:
-        return {}
-    finally:
-        con.close()
-    return out
+    """Return schema-v2 mirror records for the requested variant ids."""
+    from geneask.annotators.gnomad_mirror import lookup_many
+
+    return lookup_many(variant_ids, db_path=mirror_db)
+
+
+def _gnomad_detail(af: float, *, version: str, ac=None, an=None,
+                   nhomalt=None, populations=None) -> dict:
+    return {
+        "af": af, "ac": ac, "an": an, "nhomalt": nhomalt,
+        "populations": dict(populations or {}), "version": version,
+    }
+
+
+def _frequency_note(record: dict) -> str:
+    ac, an = record.get("ac"), record.get("an")
+    version = record.get("version") or ""
+    if ac is not None and an is not None:
+        return f"seen in {ac:,} of {an:,} sampled chromosomes (gnomAD {version})"
+    return f"allele frequency {record['af']:.2g} (gnomAD {version})"
 
 
 def _to_gnomad_id(variant_id: str) -> str:
@@ -192,7 +190,8 @@ def allele_frequency(variant_id: str, dataset: str = "gnomad_r4",
     mirror = _mirror_path(mirror_db)
     if Path(mirror).exists():
         hits = _mirror_lookup_many([variant_id], mirror)
-        return hits.get(variant_id)
+        record = hits.get(variant_id)
+        return record.get("af") if record else None
     cache = _cache_path(cache_db)
     con = _cache_con(cache)
     try:
@@ -271,16 +270,15 @@ def annotate_findings(findings, cache_db: str | None = None,
         hits = _mirror_lookup_many(variant_markers, mirror)
         n = 0
         for f, m in zip(findings, markers):
-            af = hits.get(m)
-            if af is None:
+            record = hits.get(m)
+            if record is None:
                 continue
             if f.detail is None:
                 f.detail = {}
+            af = record["af"]
             f.detail["gnomad_af"] = af
-            pct = af * 100
-            freq = (f"{pct:.1f}% of people" if pct >= 0.1
-                    else f"~{pct:.3f}% of people (rare)")
-            f.description = f"{f.description} — carried by {freq} (gnomAD)"
+            f.detail["gnomad"] = dict(record)
+            f.description = f"{f.description} — {_frequency_note(record)}"
             n += 1
         return n
 
@@ -297,9 +295,8 @@ def annotate_findings(findings, cache_db: str | None = None,
         if f.detail is None:
             f.detail = {}
         f.detail["gnomad_af"] = af
-        pct = af * 100
-        freq = (f"{pct:.1f}% of people" if pct >= 0.1
-                else f"~{pct:.3f}% of people (rare)")
-        f.description = f"{f.description} — carried by {freq} (gnomAD)"
+        record = _gnomad_detail(af, version="r4")
+        f.detail["gnomad"] = record
+        f.description = f"{f.description} — {_frequency_note(record)}"
         n += 1
     return n
