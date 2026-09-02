@@ -20,13 +20,15 @@ BRCA2,HGNC:1101,Another BRCA2 condition,MONDO:9999999,AR,SOP9,Limited,https://cl
 GENE5,HGNC:5,Condition five,MONDO:0000005,Unknown,SOP9,Moderate,https://clinicalgenome.org/gene5,2026-01-05,Other GCEP
 """
 
-ACTIONABILITY_ADULT = """GENE\tDISEASE\tSCORE\tREPORT URL
-BRCA2\tHereditary breast ovarian cancer syndrome\t12\thttps://clinicalgenome.org/actionability/brca2
-MUTYH\tMUTYH polyposis\t8\thttps://clinicalgenome.org/actionability/mutyh
+ACTIONABILITY_ADULT = """# docId\ttopicIri\tcurationType\tlatestSearchDate\tlastUpdated\tlastAuthor\tcontext\tcontextIri\trelease\treleaseDate\tgeneOrVariant\tgeneOmim\tdisease\tomim\tstatus-overall\tstatus-stg1\tstatus-stg2\tstatus-scoring\toutcome\toutcomeScoringGroup\tintervention\tinterventionScoringGroup\tseverity\tlikelihood\tnatureOfIntervention\teffectiveness\toverall
+AC1\t/AC1\tGene-Condition\td\td\ta\tAdult\thttps://clinicalgenome.org/actionability/brca2\t1.0.0\td\tBRCA2\t600185\tHereditary breast ovarian cancer syndrome\t612555\tReleased\tComplete\tComplete\tComplete\tBreast cancer\tGroupA\tSurveillance\tGroupA\t3\t3\t3\t3\t12AA
+AC1\t/AC1\tGene-Condition\td\td\ta\tAdult\thttps://clinicalgenome.org/actionability/brca2\t1.0.0\td\tBRCA2\t600185\tHereditary breast ovarian cancer syndrome\t612555\tReleased\tComplete\tComplete\tComplete\tOvarian cancer\tGroupA\tSurgery\tGroupB\t3\t2\t2\t2\t9CB
+AC2\t/AC2\tGene-Condition\td\td\ta\tAdult\thttps://clinicalgenome.org/actionability/mutyh\t1.0.0\td\tMUTYH\t604933\tMUTYH polyposis\t608456\tReleased\tComplete\tComplete\tComplete\tPolyposis\tGroupA\tColonoscopy\tGroupA\t2\t2\t2\t2\t8CB
+AC3\t/AC3\tGene-Condition\td\td\ta\tAdult\thttps://clinicalgenome.org/actionability/sdhd\t1.0.0\td\tSDHD\t602690\tHereditary paraganglioma\t168000\tRetracted\tComplete\tComplete\tComplete\tTumour\tGroupA\tImaging\tGroupA\t3\t3\t3\t3\t10CC
 """
 
-ACTIONABILITY_PEDIATRIC = """GENE\tDISEASE\tSCORE\tREPORT URL
-F8\tHemophilia A\t10\thttps://clinicalgenome.org/actionability/f8
+ACTIONABILITY_PEDIATRIC = """# docId\ttopicIri\tcurationType\tlatestSearchDate\tlastUpdated\tlastAuthor\tcontext\tcontextIri\trelease\treleaseDate\tgeneOrVariant\tgeneOmim\tdisease\tomim\tstatus-overall\tstatus-stg1\tstatus-stg2\tstatus-scoring\toutcome\toutcomeScoringGroup\tintervention\tinterventionScoringGroup\tseverity\tlikelihood\tnatureOfIntervention\teffectiveness\toverall
+AC4\t/AC4\tGene-Condition\td\td\ta\tPediatric\thttps://clinicalgenome.org/actionability/f8\t1.0.0\td\tF8\t300841\tHemophilia A\t306700\tReleased\tComplete\tComplete\tComplete\tBleeding\tGroupA\tFactor replacement\tGroupA\t3\t3\t3\t3\t10AB
 """
 
 
@@ -92,3 +94,12 @@ def test_old_schema_is_refused_with_a_rebuild_note(tmp_path):
     status = clingen.mirror_status(str(database))
     assert status.health == Health.UNAVAILABLE
     assert "rebuild" in status.note.lower()
+
+
+def test_actionability_keeps_the_highest_score_and_drops_retracted(tmp_path):
+    _sources(tmp_path)
+    db = str(tmp_path / "clingen.db")
+    clingen.build_mirror(db, str(tmp_path))
+    rows = clingen.lookup("BRCA2", db_path=db)["actionability"]
+    assert [r["score"] for r in rows if r["context"] == "adult"] == [12.0]
+    assert clingen.lookup("SDHD", db_path=db)["actionability"] == []

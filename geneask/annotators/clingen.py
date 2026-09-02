@@ -36,13 +36,19 @@ _VALIDITY_FILE = "clingen_gene_validity.csv"
 _ADULT_FILE = "clingen_actionability_adult.tsv"
 _PEDIATRIC_FILE = "clingen_actionability_pediatric.tsv"
 
-# The vendor hosts were unreachable from studio8t on 2026-09-02. These aliases
-# follow the approved plan and fixture. Header detection makes a changed live
-# shape fail clearly instead of skipping a fixed number of preamble lines.
-_GENE_FIELDS = ("GENE SYMBOL", "GENE", "GENE(S)")
-_DISEASE_FIELDS = ("DISEASE LABEL", "DISEASE", "CONDITION")
-_SCORE_FIELDS = ("SCORE", "ACTIONABILITY SCORE", "TOTAL SCORE")
-_REPORT_FIELDS = ("ONLINE REPORT", "REPORT URL", "REPORT")
+# Field names verified against the live files on 2026-09-02. Validity CSV header
+# (after a four-row preamble): GENE SYMBOL, GENE ID (HGNC), DISEASE LABEL,
+# DISEASE ID (MONDO), MOI, SOP, CLASSIFICATION, ONLINE REPORT, CLASSIFICATION
+# DATE, GCEP. Actionability TSV header (first row, "# docId ..."): ... context,
+# contextIri, ..., geneOrVariant, geneOmim, disease, omim, status-overall, ...,
+# outcome, ..., overall. `overall` reads like "10CB": the total score, then two
+# evidence-level letters. Header detection makes a changed live shape fail
+# clearly instead of skipping a fixed number of preamble lines.
+_GENE_FIELDS = ("GENE SYMBOL", "geneOrVariant", "GENE", "GENE(S)")
+_DISEASE_FIELDS = ("DISEASE LABEL", "disease", "CONDITION")
+_SCORE_FIELDS = ("overall", "SCORE", "ACTIONABILITY SCORE", "TOTAL SCORE")
+_REPORT_FIELDS = ("ONLINE REPORT", "contextIri", "REPORT URL", "REPORT")
+_STATUS_FIELDS = ("status-overall", "STATUS")
 
 _CLASSIFICATION_RANK = {
     "definitive": 7,
@@ -103,10 +109,16 @@ def _download(url: str, destination: Path) -> None:
 
 
 def _number(value: str) -> float | None:
-    try:
-        return None if value in (None, "") else float(value)
-    except (TypeError, ValueError):
+    """The numeric score. ClinGen's `overall` column reads like "10CB": the total
+    score followed by two evidence-level letters, so the leading number is the
+    score. A plain number parses as itself; anything else is None."""
+    text = str(value or "").strip()
+    if not text:
         return None
+    match = re.match(r"^\s*(\d+(?:\.\d+)?)", text)
+    if not match:
+        return None
+    return float(match.group(1))
 
 
 def _genes(value: str) -> list[str]:
@@ -156,6 +168,8 @@ def build_mirror(db_path: str | None = None, workdir: str | None = None) -> dict
             "\t",
             ((_GENE_FIELDS), (_DISEASE_FIELDS), (_SCORE_FIELDS)),
         ):
+            if _value(row, *_STATUS_FIELDS).strip().lower() == "retracted":
+                continue
             disease = _value(row, *_DISEASE_FIELDS)
             score = _number(_value(row, *_SCORE_FIELDS))
             for gene in _genes(_value(row, *_GENE_FIELDS)):
@@ -194,7 +208,11 @@ def build_mirror(db_path: str | None = None, workdir: str | None = None) -> dict
             "INSERT OR REPLACE INTO validity VALUES (?,?,?,?,?,?,?,?)", validity_rows
         )
         connection.executemany(
-            "INSERT OR REPLACE INTO actionability VALUES (?,?,?,?,?)",
+            # One curation has several outcome rows; keep the highest score per
+            # (gene, disease, context) rather than whichever row came last.
+            "INSERT INTO actionability VALUES (?,?,?,?,?) ON CONFLICT(gene, disease, context) "
+            "DO UPDATE SET score = MAX(COALESCE(score, -1), COALESCE(excluded.score, -1)), "
+            "report_url = COALESCE(excluded.report_url, report_url)",
             actionability_rows,
         )
         connection.execute("CREATE INDEX validity_gene ON validity(gene)")
@@ -204,7 +222,7 @@ def build_mirror(db_path: str | None = None, workdir: str | None = None) -> dict
     return {
         "source": "clingen",
         "validity": len(validity_rows),
-        "actionability": len(actionability_rows),
+        "actionability": connection.execute("SELECT COUNT(*) FROM actionability").fetchone()[0],
         "retrieved_on": retrieved_on,
         "db": database,
     }
