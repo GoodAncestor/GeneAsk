@@ -43,8 +43,12 @@ _MAX_VARIANTS_ENV = "GNOMAD_MIRROR_MAX_VARIANTS"
 SCHEMA_VERSION = "2"
 GNOMAD_VERSION = "v4.1"
 
-# The current vendor header was unavailable on 2026-09-02. Ingestion keeps every
-# AF_* key it encounters, so population coverage does not depend on a fixed list.
+# Populations kept per allele. gnomAD v4.1 carries ~100 AF_* keys per site (every
+# group, split by sex, plus joint and grpmax variants). Keeping them all measured
+# 37 GB for part of chromosome 1 alone on 2026-09-02, against 48 GB for the whole
+# v1 mirror, so the row keeps the ten top-level genetic-ancestry groups and
+# grpmax only. Sex-split and joint keys are left in the source file.
+POPULATIONS = ("afr", "ami", "amr", "asj", "eas", "fin", "mid", "nfe", "sas", "remaining", "grpmax")
 
 # Chromosome order for the (default, unbounded) full build.
 ALL_CHROMS = [str(i) for i in range(1, 23)] + ["X", "Y"]
@@ -171,12 +175,13 @@ def _ingest_chrom(con: sqlite3.Connection, vcf_path: Path, remaining: int | None
                 except ValueError:
                     continue
                 populations = {}
-                for key in info:
-                    if not key.startswith("AF_"):
+                for pop in POPULATIONS:
+                    key = f"AF_{pop}"
+                    if key not in info:
                         continue
                     raw = _list_value(info, key, i)
                     try:
-                        populations[key[3:]] = float(raw)
+                        populations[pop] = float(raw)
                     except (TypeError, ValueError):
                         continue
                 rows.append((

@@ -8,7 +8,7 @@ from geneask.annotators.gnomad_mirror import (
 
 _VCF = """##fileformat=VCFv4.2
 #CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO
-chr13\t32316419\t.\tCAG\tC\t.\tPASS\tAF=0.0000032;AC=5;AN=1560000;nhomalt=0;AF_nfe=0.0000041;AF_afr=0
+chr13\t32316419\t.\tCAG\tC\t.\tPASS\tAF=0.0000032;AC=5;AN=1560000;nhomalt=0;AF_nfe=0.0000041;AF_afr=0;AF_nfe_XX=0.000005;AF_joint_nfe=0.000004;AF_grpmax=0.0000041
 chr13\t32316500\t.\tA\tG,T\t.\tPASS\tAF=0.1,0.2;AC=10,20;AN=100;nhomalt=1,2;AF_nfe=0.11,0.21
 """
 
