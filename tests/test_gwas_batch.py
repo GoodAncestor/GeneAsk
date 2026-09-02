@@ -14,13 +14,18 @@ from geneask.annotators import gwas_catalog as gw
 def mirror(tmp_path, monkeypatch):
     db = tmp_path / "gwas.db"
     con = sqlite3.connect(db)
+    con.execute("CREATE TABLE meta(key TEXT PRIMARY KEY, value TEXT)")
+    con.execute("INSERT INTO meta VALUES ('schema_version', '2')")
     con.execute("""CREATE TABLE assoc(rsid TEXT, chrom TEXT, pos INTEGER,
         risk_allele TEXT, trait TEXT, mapped_trait TEXT, efo_uri TEXT,
-        pvalue REAL, raf REAL, pmid TEXT)""")
-    con.executemany("INSERT INTO assoc VALUES (?,?,?,?,?,?,?,?,?,?)", [
-        ("rs1", "1", 100, "A", "trait one", "trait one", "http://e/EFO_1", 1e-9, 0.3, "111"),
-        ("rs1", "1", 100, "G", "trait two", "trait two", "http://e/EFO_2", 1e-6, 0.2, "222"),
-        ("rs2", "2", 200, "T", "trait three", "trait three", "http://e/EFO_3", 1e-12, 0.1, "333"),
+        pvalue REAL, raf REAL, pmid TEXT, effect_type TEXT, effect REAL,
+        ci_text TEXT, accession TEXT, initial_n TEXT, replication_n TEXT,
+        mapped_gene TEXT, pvalue_text TEXT)""")
+    empty = (None,) * 8
+    con.executemany("INSERT INTO assoc VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)", [
+        ("rs1", "1", 100, "A", "trait one", "trait one", "http://e/EFO_1", 1e-9, 0.3, "111") + empty,
+        ("rs1", "1", 100, "G", "trait two", "trait two", "http://e/EFO_2", 1e-6, 0.2, "222") + empty,
+        ("rs2", "2", 200, "T", "trait three", "trait three", "http://e/EFO_3", 1e-12, 0.1, "333") + empty,
     ])
     con.execute("CREATE INDEX idx_rsid ON assoc(rsid)")
     con.commit()

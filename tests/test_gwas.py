@@ -8,14 +8,20 @@ from biocore.providers.base import Tier
 def _mini(tmp_path):
     db = tmp_path / "gwas.db"
     con = sqlite3.connect(db)
+    con.execute("CREATE TABLE meta(key TEXT PRIMARY KEY, value TEXT)")
+    con.execute("INSERT INTO meta VALUES ('schema_version', '2')")
     con.execute("""CREATE TABLE assoc(rsid TEXT, chrom TEXT, pos INTEGER,
         risk_allele TEXT, trait TEXT, mapped_trait TEXT, efo_uri TEXT,
-        pvalue REAL, raf TEXT, pmid TEXT)""")
-    con.executemany("INSERT INTO assoc VALUES (?,?,?,?,?,?,?,?,?,?)", [
+        pvalue REAL, raf TEXT, pmid TEXT, effect_type TEXT, effect REAL,
+        ci_text TEXT, accession TEXT, initial_n TEXT, replication_n TEXT,
+        mapped_gene TEXT, pvalue_text TEXT)""")
+    con.executemany("INSERT INTO assoc VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)", [
         ("rs704", "2", 100, "G", "LDL cholesterol", "LDL cholesterol",
-         "http://www.ebi.ac.uk/efo/EFO_0004611", 4e-8, "0.4", "12345678"),
+         "http://www.ebi.ac.uk/efo/EFO_0004611", 4e-8, "0.4", "12345678",
+         None, None, None, None, None, None, None, None),
         ("rs704", "2", 100, "G", "heart disease", "coronary artery disease",
-         "http://www.ebi.ac.uk/efo/EFO_0000378", 2e-3, "0.4", "22222222")])
+         "http://www.ebi.ac.uk/efo/EFO_0000378", 2e-3, "0.4", "22222222",
+         None, None, None, None, None, None, None, None)])
     con.execute("CREATE INDEX idx_rsid ON assoc(rsid)")
     con.commit(); con.close()
     return str(db)
