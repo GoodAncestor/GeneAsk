@@ -1,0 +1,16 @@
+{
+  "phenotypes": [
+    {
+      "geneSymbol": "CYP2C19",
+      "diplotype": "*1/*2",
+      "phenotype": "Intermediate Metabolizer",
+      "activityScore": 1.0
+    },
+    {
+      "geneSymbol": "CYP2D6",
+      "diplotype": "*1/*4",
+      "phenotype": "Intermediate Metabolizer",
+      "activityScore": 1.0
+    }
+  ]
+}
