@@ -36,14 +36,26 @@ def test_v2_rows_keep_counts_and_populations(tmp_path):
     assert row2["populations"]["nfe"] == 0.21
 
 
-def test_v1_database_is_refused(tmp_path):
+def test_v1_database_is_read_as_frequency_only(tmp_path):
     db = str(tmp_path / "old.db")
     con = sqlite3.connect(db)
     con.execute("CREATE TABLE af(variant_id TEXT PRIMARY KEY, af REAL)")
     con.execute("INSERT INTO af VALUES ('13-1-A-G', 0.1)")
     con.commit()
     con.close()
-    assert lookup_many(["13-1-A-G"], db_path=db) == {}
+    rec = lookup_many(["13-1-A-G"], db_path=db)["13-1-A-G"]
+    assert rec["af"] == 0.1 and rec["ac"] is None and rec["an"] is None
+    assert rec["populations"] == {} and rec["counts_available"] is False
     status = mirror_status(db)
-    assert status.health.value == "unavailable"
-    assert "schema" in (status.note or "").lower()
+    assert status.health.value == "stale"
+    assert "not available" in (status.note or "").lower()
+
+
+def test_unrecognised_database_is_refused(tmp_path):
+    db = str(tmp_path / "odd.db")
+    con = sqlite3.connect(db)
+    con.execute("CREATE TABLE af(variant_id TEXT PRIMARY KEY)")
+    con.commit()
+    con.close()
+    assert lookup_many(["x"], db_path=db) == {}
+    assert mirror_status(db).health.value == "unavailable"

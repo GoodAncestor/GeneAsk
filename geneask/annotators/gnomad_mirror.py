@@ -271,16 +271,28 @@ def mirror_available(db_path: str | None = None) -> bool:
     return Path(_db_path(db_path)).exists()
 
 
-def _schema_ok(con: sqlite3.Connection) -> bool:
+def _schema_version(con: sqlite3.Connection) -> str | None:
+    """"2" for a v2 mirror, "1" for the original frequency-only table, None for
+    anything else. A v1 file is not refused: its frequencies are true, only the
+    counts and populations are absent, and absent reads as "not available"."""
     try:
-        row = con.execute(
-            "SELECT value FROM meta WHERE key='schema_version'"
-        ).fetchone()
         columns = {item[1] for item in con.execute("PRAGMA table_info(af)")}
     except sqlite3.OperationalError:
-        return False
+        return None
+    if not {"variant_id", "af"}.issubset(columns):
+        return None
+    try:
+        row = con.execute("SELECT value FROM meta WHERE key='schema_version'").fetchone()
+    except sqlite3.OperationalError:
+        row = None
     expected = {"variant_id", "af", "ac", "an", "nhomalt", "populations"}
-    return bool(row) and str(row[0]) == SCHEMA_VERSION and expected.issubset(columns)
+    if row and str(row[0]) == SCHEMA_VERSION and expected.issubset(columns):
+        return "2"
+    return "1" if not row else None
+
+
+def _schema_ok(con: sqlite3.Connection) -> bool:
+    return _schema_version(con) == "2"
 
 
 def lookup_many(variant_ids, db_path: str | None = None) -> dict:
@@ -294,7 +306,8 @@ def lookup_many(variant_ids, db_path: str | None = None) -> dict:
     con = sqlite3.connect(db)
     con.row_factory = sqlite3.Row
     try:
-        if not _schema_ok(con):
+        version = _schema_version(con)
+        if version is None:
             return {}
         out = {}
         for start in range(0, len(wanted), 900):
@@ -305,11 +318,18 @@ def lookup_many(variant_ids, db_path: str | None = None) -> dict:
             for row in con.execute(query, chunk):
                 if row["af"] is None or row["af"] < 0:
                     continue
+                if version == "1":
+                    out[row["variant_id"]] = {
+                        "af": row["af"], "ac": None, "an": None, "nhomalt": None,
+                        "populations": {}, "version": GNOMAD_VERSION,
+                        "counts_available": False,
+                    }
+                    continue
                 out[row["variant_id"]] = {
                     "af": row["af"], "ac": row["ac"], "an": row["an"],
                     "nhomalt": row["nhomalt"],
                     "populations": json.loads(row["populations"] or "{}"),
-                    "version": GNOMAD_VERSION,
+                    "version": GNOMAD_VERSION, "counts_available": True,
                 }
         return out
     except sqlite3.OperationalError:
@@ -328,14 +348,22 @@ def mirror_status(db_path: str | None = None) -> ProviderStatus:
         )
     con = sqlite3.connect(db)
     try:
-        if not _schema_ok(con):
+        version = _schema_version(con)
+        if version is None:
             return ProviderStatus(
                 name="gnomad_mirror", health=Health.UNAVAILABLE,
-                note="gnomAD mirror schema v2 requires a rebuild.",
+                note="gnomAD mirror schema is not recognised; rebuild it.",
             )
         count = con.execute("SELECT COUNT(*) FROM af").fetchone()[0]
     finally:
         con.close()
+    if version == "1":
+        return ProviderStatus(
+            name="gnomad_mirror", health=Health.STALE, version=GNOMAD_VERSION,
+            record_count=count,
+            note="frequency only: allele counts and population frequencies are not "
+                 "available until the v2 mirror is built.",
+        )
     return ProviderStatus(
         name="gnomad_mirror", health=Health.OK, version=GNOMAD_VERSION,
         record_count=count,
