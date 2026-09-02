@@ -138,10 +138,13 @@ def screen_findings(carried_variant_ids: list[dict], panel: dict | None = None) 
     # box gunzipped and JSON-parsed 393,806 variants and then discarded them,
     # because the mirror superseded the result.
     idx = None
+    source = "clinvar_panel_157"
     if panel is None:
         try:
             from ..annotators.clinvar_mirror import lookup_from_mirror
             idx = lookup_from_mirror(wanted)      # None when no mirror exists
+            if idx is not None:
+                source = "clinvar_mirror"
         except Exception:
             idx = None
     if idx is None:
@@ -167,7 +170,7 @@ def screen_findings(carried_variant_ids: list[dict], panel: dict | None = None) 
         geno = _abbrev_allele(v.get("genotype", "?"))
         vid = rec.get("clinvar_variation_id")
         findings.append(Finding(
-            marker=v.get("variant_id", "?"), source="clinvar_panel_157",
+            marker=v.get("variant_id", "?"), source=source,
             description=f"{gene}: {rec.get('clinical_significance', sig)}"
                         f" (genotype {geno}, {v.get('platform','?')})",
             tier=tier, categories=[Category.CLINICAL],
@@ -181,5 +184,14 @@ def screen_findings(carried_variant_ids: list[dict], panel: dict | None = None) 
                     # carried so JSON/MCP consumers resolve the record directly
                     # instead of parsing it back out of the link
                     "clinvar_variation_id": vid,
-                    "gold_stars": stars, "platform": v.get("platform")}))
+                    "gold_stars": stars, "platform": v.get("platform"),
+                    "conditions": list(rec.get("conditions") or []),
+                    "condition_ids": list(rec.get("condition_ids") or []),
+                    "molecular_consequence": rec.get("molecular_consequence"),
+                    "origin": list(rec.get("origin") or []),
+                    "allele_id": rec.get("allele_id"),
+                    "genotype": v.get("genotype"),
+                    "zygosity": v.get("zygosity"),
+                    "filter": v.get("filter"), "qual": v.get("qual"),
+                    "gq": v.get("gq"), "dp": v.get("dp")}))
     return findings
