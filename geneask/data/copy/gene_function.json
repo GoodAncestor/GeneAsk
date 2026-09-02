@@ -1,0 +1,793 @@
+{
+ "version": "1",
+ "reviewed_by": [],
+ "reviewed_on": null,
+ "note": "One sentence of gene function per gene, written from the NCBI Gene summary. Simplified Technical English.",
+ "rows": {
+  "APC": {
+   "sentence": "APC makes a protein that keeps colon cells from growing into polyps.",
+   "source": "NCBI Gene",
+   "url": "https://www.ncbi.nlm.nih.gov/gene/?term=APC%5Bsym%5D"
+  },
+  "MYH11": {
+   "sentence": "MYH11 makes a muscle protein in the walls of large blood vessels.",
+   "source": "NCBI Gene",
+   "url": "https://www.ncbi.nlm.nih.gov/gene/?term=MYH11%5Bsym%5D"
+  },
+  "ACTA2": {
+   "sentence": "ACTA2 makes a muscle protein that lets blood vessel walls contract.",
+   "source": "NCBI Gene",
+   "url": "https://www.ncbi.nlm.nih.gov/gene/?term=ACTA2%5Bsym%5D"
+  },
+  "TMEM43": {
+   "sentence": "TMEM43 makes a protein in the membrane around a heart cell's nucleus.",
+   "source": "NCBI Gene",
+   "url": "https://www.ncbi.nlm.nih.gov/gene/?term=TMEM43%5Bsym%5D"
+  },
+  "DSP": {
+   "sentence": "DSP makes desmoplakin, which holds heart muscle cells together.",
+   "source": "NCBI Gene",
+   "url": "https://www.ncbi.nlm.nih.gov/gene/?term=DSP%5Bsym%5D"
+  },
+  "PKP2": {
+   "sentence": "PKP2 makes a protein in the junctions that hold heart muscle cells together.",
+   "source": "NCBI Gene",
+   "url": "https://www.ncbi.nlm.nih.gov/gene/?term=PKP2%5Bsym%5D"
+  },
+  "DSG2": {
+   "sentence": "DSG2 makes a protein in the junctions that hold heart muscle cells together.",
+   "source": "NCBI Gene",
+   "url": "https://www.ncbi.nlm.nih.gov/gene/?term=DSG2%5Bsym%5D"
+  },
+  "DSC2": {
+   "sentence": "DSC2 makes a protein in the junctions that hold heart muscle cells together.",
+   "source": "NCBI Gene",
+   "url": "https://www.ncbi.nlm.nih.gov/gene/?term=DSC2%5Bsym%5D"
+  },
+  "BTD": {
+   "sentence": "BTD makes the enzyme that recycles the vitamin biotin.",
+   "source": "NCBI Gene",
+   "url": "https://www.ncbi.nlm.nih.gov/gene/?term=BTD%5Bsym%5D"
+  },
+  "BRCA1": {
+   "sentence": "BRCA1 makes a protein that helps cells repair broken DNA.",
+   "source": "NCBI Gene",
+   "url": "https://www.ncbi.nlm.nih.gov/gene/?term=BRCA1%5Bsym%5D"
+  },
+  "BRCA2": {
+   "sentence": "BRCA2 makes a protein that helps cells repair broken DNA.",
+   "source": "NCBI Gene",
+   "url": "https://www.ncbi.nlm.nih.gov/gene/?term=BRCA2%5Bsym%5D"
+  },
+  "SCN5A": {
+   "sentence": "SCN5A makes the sodium channel that starts each heartbeat's electrical signal.",
+   "source": "NCBI Gene",
+   "url": "https://www.ncbi.nlm.nih.gov/gene/?term=SCN5A%5Bsym%5D"
+  },
+  "RYR2": {
+   "sentence": "RYR2 makes the channel that releases calcium inside heart muscle cells.",
+   "source": "NCBI Gene",
+   "url": "https://www.ncbi.nlm.nih.gov/gene/?term=RYR2%5Bsym%5D"
+  },
+  "CASQ2": {
+   "sentence": "CASQ2 makes a protein that stores calcium inside heart muscle cells.",
+   "source": "NCBI Gene",
+   "url": "https://www.ncbi.nlm.nih.gov/gene/?term=CASQ2%5Bsym%5D"
+  },
+  "CALM1": {
+   "sentence": "CALM1 makes calmodulin, a calcium sensor that tunes heart cell signals.",
+   "source": "NCBI Gene",
+   "url": "https://www.ncbi.nlm.nih.gov/gene/?term=CALM1%5Bsym%5D"
+  },
+  "TRDN": {
+   "sentence": "TRDN makes triadin, a protein that helps heart cells handle calcium.",
+   "source": "NCBI Gene",
+   "url": "https://www.ncbi.nlm.nih.gov/gene/?term=TRDN%5Bsym%5D"
+  },
+  "FLNC": {
+   "sentence": "FLNC makes filamin C, a scaffold protein in heart and skeletal muscle.",
+   "source": "NCBI Gene",
+   "url": "https://www.ncbi.nlm.nih.gov/gene/?term=FLNC%5Bsym%5D"
+  },
+  "LMNA": {
+   "sentence": "LMNA makes lamins, proteins that give the cell nucleus its structure.",
+   "source": "NCBI Gene",
+   "url": "https://www.ncbi.nlm.nih.gov/gene/?term=LMNA%5Bsym%5D"
+  },
+  "TNNT2": {
+   "sentence": "TNNT2 makes a troponin protein that controls heart muscle contraction.",
+   "source": "NCBI Gene",
+   "url": "https://www.ncbi.nlm.nih.gov/gene/?term=TNNT2%5Bsym%5D"
+  },
+  "DES": {
+   "sentence": "DES makes desmin, a protein that holds muscle cell structure together.",
+   "source": "NCBI Gene",
+   "url": "https://www.ncbi.nlm.nih.gov/gene/?term=DES%5Bsym%5D"
+  },
+  "MYH7": {
+   "sentence": "MYH7 makes the main motor protein of heart muscle contraction.",
+   "source": "NCBI Gene",
+   "url": "https://www.ncbi.nlm.nih.gov/gene/?term=MYH7%5Bsym%5D"
+  },
+  "TNNC1": {
+   "sentence": "TNNC1 makes the troponin subunit that binds calcium in heart muscle.",
+   "source": "NCBI Gene",
+   "url": "https://www.ncbi.nlm.nih.gov/gene/?term=TNNC1%5Bsym%5D"
+  },
+  "RBM20": {
+   "sentence": "RBM20 makes a protein that edits messages for other heart muscle proteins.",
+   "source": "NCBI Gene",
+   "url": "https://www.ncbi.nlm.nih.gov/gene/?term=RBM20%5Bsym%5D"
+  },
+  "BAG3": {
+   "sentence": "BAG3 makes a protein that helps heart muscle cells manage stress.",
+   "source": "NCBI Gene",
+   "url": "https://www.ncbi.nlm.nih.gov/gene/?term=BAG3%5Bsym%5D"
+  },
+  "TTN": {
+   "sentence": "TTN makes titin, the largest human protein, which gives muscle its spring.",
+   "source": "NCBI Gene",
+   "url": "https://www.ncbi.nlm.nih.gov/gene/?term=TTN%5Bsym%5D"
+  },
+  "COL3A1": {
+   "sentence": "COL3A1 makes type III collagen, which strengthens blood vessels and organs.",
+   "source": "NCBI Gene",
+   "url": "https://www.ncbi.nlm.nih.gov/gene/?term=COL3A1%5Bsym%5D"
+  },
+  "GLA": {
+   "sentence": "GLA makes an enzyme that breaks down a fatty substance inside cells.",
+   "source": "NCBI Gene",
+   "url": "https://www.ncbi.nlm.nih.gov/gene/?term=GLA%5Bsym%5D"
+  },
+  "LDLR": {
+   "sentence": "LDLR makes the receptor that pulls LDL cholesterol out of the blood.",
+   "source": "NCBI Gene",
+   "url": "https://www.ncbi.nlm.nih.gov/gene/?term=LDLR%5Bsym%5D"
+  },
+  "APOB": {
+   "sentence": "APOB makes the protein that carries LDL cholesterol in the blood.",
+   "source": "NCBI Gene",
+   "url": "https://www.ncbi.nlm.nih.gov/gene/?term=APOB%5Bsym%5D"
+  },
+  "TPM1": {
+   "sentence": "TPM1 makes tropomyosin, which helps regulate heart muscle contraction.",
+   "source": "NCBI Gene",
+   "url": "https://www.ncbi.nlm.nih.gov/gene/?term=TPM1%5Bsym%5D"
+  },
+  "MYBPC3": {
+   "sentence": "MYBPC3 makes a protein that regulates heart muscle contraction.",
+   "source": "NCBI Gene",
+   "url": "https://www.ncbi.nlm.nih.gov/gene/?term=MYBPC3%5Bsym%5D"
+  },
+  "PRKAG2": {
+   "sentence": "PRKAG2 makes part of an energy sensor in heart muscle cells.",
+   "source": "NCBI Gene",
+   "url": "https://www.ncbi.nlm.nih.gov/gene/?term=PRKAG2%5Bsym%5D"
+  },
+  "TNNI3": {
+   "sentence": "TNNI3 makes a troponin protein that relaxes heart muscle between beats.",
+   "source": "NCBI Gene",
+   "url": "https://www.ncbi.nlm.nih.gov/gene/?term=TNNI3%5Bsym%5D"
+  },
+  "MYL3": {
+   "sentence": "MYL3 makes a light chain of the heart muscle motor protein.",
+   "source": "NCBI Gene",
+   "url": "https://www.ncbi.nlm.nih.gov/gene/?term=MYL3%5Bsym%5D"
+  },
+  "MYL2": {
+   "sentence": "MYL2 makes a light chain of the heart muscle motor protein.",
+   "source": "NCBI Gene",
+   "url": "https://www.ncbi.nlm.nih.gov/gene/?term=MYL2%5Bsym%5D"
+  },
+  "ACTC1": {
+   "sentence": "ACTC1 makes the actin filaments that heart muscle pulls against.",
+   "source": "NCBI Gene",
+   "url": "https://www.ncbi.nlm.nih.gov/gene/?term=ACTC1%5Bsym%5D"
+  },
+  "RET": {
+   "sentence": "RET makes a receptor that signals cells to grow, in the thyroid and elsewhere.",
+   "source": "NCBI Gene",
+   "url": "https://www.ncbi.nlm.nih.gov/gene/?term=RET%5Bsym%5D"
+  },
+  "PALB2": {
+   "sentence": "PALB2 makes a partner protein for BRCA2 in DNA repair.",
+   "source": "NCBI Gene",
+   "url": "https://www.ncbi.nlm.nih.gov/gene/?term=PALB2%5Bsym%5D"
+  },
+  "HFE": {
+   "sentence": "HFE makes a protein that helps regulate how much iron the gut absorbs.",
+   "source": "NCBI Gene",
+   "url": "https://www.ncbi.nlm.nih.gov/gene/?term=HFE%5Bsym%5D"
+  },
+  "ENG": {
+   "sentence": "ENG makes a receptor on blood vessel lining cells that guides vessel growth.",
+   "source": "NCBI Gene",
+   "url": "https://www.ncbi.nlm.nih.gov/gene/?term=ENG%5Bsym%5D"
+  },
+  "ACVRL1": {
+   "sentence": "ACVRL1 makes a receptor on blood vessel lining cells that guides vessel growth.",
+   "source": "NCBI Gene",
+   "url": "https://www.ncbi.nlm.nih.gov/gene/?term=ACVRL1%5Bsym%5D"
+  },
+  "SDHD": {
+   "sentence": "SDHD makes part of an enzyme complex that cells use to make energy.",
+   "source": "NCBI Gene",
+   "url": "https://www.ncbi.nlm.nih.gov/gene/?term=SDHD%5Bsym%5D"
+  },
+  "SDHB": {
+   "sentence": "SDHB makes part of an enzyme complex that cells use to make energy.",
+   "source": "NCBI Gene",
+   "url": "https://www.ncbi.nlm.nih.gov/gene/?term=SDHB%5Bsym%5D"
+  },
+  "TTR": {
+   "sentence": "TTR makes transthyretin, a blood protein that carries thyroid hormone.",
+   "source": "NCBI Gene",
+   "url": "https://www.ncbi.nlm.nih.gov/gene/?term=TTR%5Bsym%5D"
+  },
+  "PCSK9": {
+   "sentence": "PCSK9 makes a protein that removes LDL receptors from liver cells.",
+   "source": "NCBI Gene",
+   "url": "https://www.ncbi.nlm.nih.gov/gene/?term=PCSK9%5Bsym%5D"
+  },
+  "BMPR1A": {
+   "sentence": "BMPR1A makes a receptor that helps control cell growth in the gut lining.",
+   "source": "NCBI Gene",
+   "url": "https://www.ncbi.nlm.nih.gov/gene/?term=BMPR1A%5Bsym%5D"
+  },
+  "SMAD4": {
+   "sentence": "SMAD4 makes a signalling protein that helps control cell growth.",
+   "source": "NCBI Gene",
+   "url": "https://www.ncbi.nlm.nih.gov/gene/?term=SMAD4%5Bsym%5D"
+  },
+  "TP53": {
+   "sentence": "TP53 makes a protein that stops damaged cells from dividing.",
+   "source": "NCBI Gene",
+   "url": "https://www.ncbi.nlm.nih.gov/gene/?term=TP53%5Bsym%5D"
+  },
+  "TGFBR1": {
+   "sentence": "TGFBR1 makes a receptor that helps control growth of connective tissue.",
+   "source": "NCBI Gene",
+   "url": "https://www.ncbi.nlm.nih.gov/gene/?term=TGFBR1%5Bsym%5D"
+  },
+  "TGFBR2": {
+   "sentence": "TGFBR2 makes a receptor that helps control growth of connective tissue.",
+   "source": "NCBI Gene",
+   "url": "https://www.ncbi.nlm.nih.gov/gene/?term=TGFBR2%5Bsym%5D"
+  },
+  "SMAD3": {
+   "sentence": "SMAD3 makes a signalling protein for connective tissue growth.",
+   "source": "NCBI Gene",
+   "url": "https://www.ncbi.nlm.nih.gov/gene/?term=SMAD3%5Bsym%5D"
+  },
+  "KCNQ1": {
+   "sentence": "KCNQ1 makes part of a potassium channel that sets the heart's electrical rhythm.",
+   "source": "NCBI Gene",
+   "url": "https://www.ncbi.nlm.nih.gov/gene/?term=KCNQ1%5Bsym%5D"
+  },
+  "KCNH2": {
+   "sentence": "KCNH2 makes part of a potassium channel that resets the heart after each beat.",
+   "source": "NCBI Gene",
+   "url": "https://www.ncbi.nlm.nih.gov/gene/?term=KCNH2%5Bsym%5D"
+  },
+  "CALM2": {
+   "sentence": "CALM2 makes calmodulin, a calcium sensor that tunes heart cell signals.",
+   "source": "NCBI Gene",
+   "url": "https://www.ncbi.nlm.nih.gov/gene/?term=CALM2%5Bsym%5D"
+  },
+  "CALM3": {
+   "sentence": "CALM3 makes calmodulin, a calcium sensor that tunes heart cell signals.",
+   "source": "NCBI Gene",
+   "url": "https://www.ncbi.nlm.nih.gov/gene/?term=CALM3%5Bsym%5D"
+  },
+  "MSH2": {
+   "sentence": "MSH2 makes a protein that fixes copying errors in DNA.",
+   "source": "NCBI Gene",
+   "url": "https://www.ncbi.nlm.nih.gov/gene/?term=MSH2%5Bsym%5D"
+  },
+  "MLH1": {
+   "sentence": "MLH1 makes a protein that fixes copying errors in DNA.",
+   "source": "NCBI Gene",
+   "url": "https://www.ncbi.nlm.nih.gov/gene/?term=MLH1%5Bsym%5D"
+  },
+  "PMS2": {
+   "sentence": "PMS2 makes a protein that fixes copying errors in DNA.",
+   "source": "NCBI Gene",
+   "url": "https://www.ncbi.nlm.nih.gov/gene/?term=PMS2%5Bsym%5D"
+  },
+  "MSH6": {
+   "sentence": "MSH6 makes a protein that fixes copying errors in DNA.",
+   "source": "NCBI Gene",
+   "url": "https://www.ncbi.nlm.nih.gov/gene/?term=MSH6%5Bsym%5D"
+  },
+  "RYR1": {
+   "sentence": "RYR1 makes the channel that releases calcium inside skeletal muscle cells.",
+   "source": "NCBI Gene",
+   "url": "https://www.ncbi.nlm.nih.gov/gene/?term=RYR1%5Bsym%5D"
+  },
+  "CACNA1S": {
+   "sentence": "CACNA1S makes a calcium channel that triggers skeletal muscle contraction.",
+   "source": "NCBI Gene",
+   "url": "https://www.ncbi.nlm.nih.gov/gene/?term=CACNA1S%5Bsym%5D"
+  },
+  "FBN1": {
+   "sentence": "FBN1 makes fibrillin, a fibre that gives connective tissue strength and stretch.",
+   "source": "NCBI Gene",
+   "url": "https://www.ncbi.nlm.nih.gov/gene/?term=FBN1%5Bsym%5D"
+  },
+  "HNF1A": {
+   "sentence": "HNF1A makes a protein that switches on genes in the liver and pancreas.",
+   "source": "NCBI Gene",
+   "url": "https://www.ncbi.nlm.nih.gov/gene/?term=HNF1A%5Bsym%5D"
+  },
+  "MEN1": {
+   "sentence": "MEN1 makes a protein that restrains cell growth in hormone glands.",
+   "source": "NCBI Gene",
+   "url": "https://www.ncbi.nlm.nih.gov/gene/?term=MEN1%5Bsym%5D"
+  },
+  "MUTYH": {
+   "sentence": "MUTYH makes a protein that repairs oxidative damage to DNA.",
+   "source": "NCBI Gene",
+   "url": "https://www.ncbi.nlm.nih.gov/gene/?term=MUTYH%5Bsym%5D"
+  },
+  "NF2": {
+   "sentence": "NF2 makes a protein that restrains growth of nerve-sheath cells.",
+   "source": "NCBI Gene",
+   "url": "https://www.ncbi.nlm.nih.gov/gene/?term=NF2%5Bsym%5D"
+  },
+  "OTC": {
+   "sentence": "OTC makes a liver enzyme that removes ammonia from the body.",
+   "source": "NCBI Gene",
+   "url": "https://www.ncbi.nlm.nih.gov/gene/?term=OTC%5Bsym%5D"
+  },
+  "SDHAF2": {
+   "sentence": "SDHAF2 makes a helper that assembles an energy-producing enzyme complex.",
+   "source": "NCBI Gene",
+   "url": "https://www.ncbi.nlm.nih.gov/gene/?term=SDHAF2%5Bsym%5D"
+  },
+  "SDHC": {
+   "sentence": "SDHC makes part of an enzyme complex that cells use to make energy.",
+   "source": "NCBI Gene",
+   "url": "https://www.ncbi.nlm.nih.gov/gene/?term=SDHC%5Bsym%5D"
+  },
+  "STK11": {
+   "sentence": "STK11 makes a protein that restrains cell growth and senses energy.",
+   "source": "NCBI Gene",
+   "url": "https://www.ncbi.nlm.nih.gov/gene/?term=STK11%5Bsym%5D"
+  },
+  "MAX": {
+   "sentence": "MAX makes a protein that partners with growth signals in the nucleus.",
+   "source": "NCBI Gene",
+   "url": "https://www.ncbi.nlm.nih.gov/gene/?term=MAX%5Bsym%5D"
+  },
+  "TMEM127": {
+   "sentence": "TMEM127 makes a protein that restrains growth signals inside cells.",
+   "source": "NCBI Gene",
+   "url": "https://www.ncbi.nlm.nih.gov/gene/?term=TMEM127%5Bsym%5D"
+  },
+  "GAA": {
+   "sentence": "GAA makes an enzyme that breaks down stored sugar inside cells.",
+   "source": "NCBI Gene",
+   "url": "https://www.ncbi.nlm.nih.gov/gene/?term=GAA%5Bsym%5D"
+  },
+  "PTEN": {
+   "sentence": "PTEN makes a protein that switches off cell growth signals.",
+   "source": "NCBI Gene",
+   "url": "https://www.ncbi.nlm.nih.gov/gene/?term=PTEN%5Bsym%5D"
+  },
+  "RB1": {
+   "sentence": "RB1 makes a protein that stops cells from dividing until they are ready.",
+   "source": "NCBI Gene",
+   "url": "https://www.ncbi.nlm.nih.gov/gene/?term=RB1%5Bsym%5D"
+  },
+  "RPE65": {
+   "sentence": "RPE65 makes an enzyme in the retina that recycles vitamin A for vision.",
+   "source": "NCBI Gene",
+   "url": "https://www.ncbi.nlm.nih.gov/gene/?term=RPE65%5Bsym%5D"
+  },
+  "TSC1": {
+   "sentence": "TSC1 makes a protein that restrains cell growth together with TSC2.",
+   "source": "NCBI Gene",
+   "url": "https://www.ncbi.nlm.nih.gov/gene/?term=TSC1%5Bsym%5D"
+  },
+  "TSC2": {
+   "sentence": "TSC2 makes a protein that restrains cell growth together with TSC1.",
+   "source": "NCBI Gene",
+   "url": "https://www.ncbi.nlm.nih.gov/gene/?term=TSC2%5Bsym%5D"
+  },
+  "VHL": {
+   "sentence": "VHL makes a protein that helps cells respond to oxygen levels.",
+   "source": "NCBI Gene",
+   "url": "https://www.ncbi.nlm.nih.gov/gene/?term=VHL%5Bsym%5D"
+  },
+  "WT1": {
+   "sentence": "WT1 makes a protein that guides kidney and gonad development.",
+   "source": "NCBI Gene",
+   "url": "https://www.ncbi.nlm.nih.gov/gene/?term=WT1%5Bsym%5D"
+  },
+  "ATP7B": {
+   "sentence": "ATP7B makes a liver protein that moves copper out of the body.",
+   "source": "NCBI Gene",
+   "url": "https://www.ncbi.nlm.nih.gov/gene/?term=ATP7B%5Bsym%5D"
+  },
+  "ABCB11": {
+   "sentence": "ABCB11 makes a liver pump that moves bile salts into bile.",
+   "source": "NCBI Gene",
+   "url": "https://www.ncbi.nlm.nih.gov/gene/?term=ABCB11%5Bsym%5D"
+  },
+  "ABCG2": {
+   "sentence": "ABCG2 makes a pump that moves urate and some drugs out of cells.",
+   "source": "NCBI Gene",
+   "url": "https://www.ncbi.nlm.nih.gov/gene/?term=ABCG2%5Bsym%5D"
+  },
+  "ACADM": {
+   "sentence": "ACADM makes an enzyme that burns medium-length fats for energy.",
+   "source": "NCBI Gene",
+   "url": "https://www.ncbi.nlm.nih.gov/gene/?term=ACADM%5Bsym%5D"
+  },
+  "APOE": {
+   "sentence": "APOE makes a protein that carries cholesterol and fats in the blood and brain.",
+   "source": "NCBI Gene",
+   "url": "https://www.ncbi.nlm.nih.gov/gene/?term=APOE%5Bsym%5D"
+  },
+  "APP": {
+   "sentence": "APP makes the precursor of amyloid, a protein found in Alzheimer plaques.",
+   "source": "NCBI Gene",
+   "url": "https://www.ncbi.nlm.nih.gov/gene/?term=APP%5Bsym%5D"
+  },
+  "ASPA": {
+   "sentence": "ASPA makes an enzyme that brain cells need to maintain myelin.",
+   "source": "NCBI Gene",
+   "url": "https://www.ncbi.nlm.nih.gov/gene/?term=ASPA%5Bsym%5D"
+  },
+  "ATXN1": {
+   "sentence": "ATXN1 makes a nerve cell protein. A repeat expansion in it causes ataxia.",
+   "source": "NCBI Gene",
+   "url": "https://www.ncbi.nlm.nih.gov/gene/?term=ATXN1%5Bsym%5D"
+  },
+  "ATXN2": {
+   "sentence": "ATXN2 makes a nerve cell protein. A repeat expansion in it causes ataxia.",
+   "source": "NCBI Gene",
+   "url": "https://www.ncbi.nlm.nih.gov/gene/?term=ATXN2%5Bsym%5D"
+  },
+  "ATXN3": {
+   "sentence": "ATXN3 makes a nerve cell protein. A repeat expansion in it causes ataxia.",
+   "source": "NCBI Gene",
+   "url": "https://www.ncbi.nlm.nih.gov/gene/?term=ATXN3%5Bsym%5D"
+  },
+  "BCKDHB": {
+   "sentence": "BCKDHB makes part of an enzyme that breaks down branched amino acids.",
+   "source": "NCBI Gene",
+   "url": "https://www.ncbi.nlm.nih.gov/gene/?term=BCKDHB%5Bsym%5D"
+  },
+  "BLM": {
+   "sentence": "BLM makes a helicase that unwinds DNA during repair.",
+   "source": "NCBI Gene",
+   "url": "https://www.ncbi.nlm.nih.gov/gene/?term=BLM%5Bsym%5D"
+  },
+  "C9ORF72": {
+   "sentence": "C9orf72 makes a nerve cell protein. A repeat expansion in it causes ALS and dementia.",
+   "source": "NCBI Gene",
+   "url": "https://www.ncbi.nlm.nih.gov/gene/?term=C9orf72%5Bsym%5D"
+  },
+  "CACNA1A": {
+   "sentence": "CACNA1A makes a calcium channel that nerve cells use to signal.",
+   "source": "NCBI Gene",
+   "url": "https://www.ncbi.nlm.nih.gov/gene/?term=CACNA1A%5Bsym%5D"
+  },
+  "CFTR": {
+   "sentence": "CFTR makes the chloride channel that keeps mucus thin in the lungs and gut.",
+   "source": "NCBI Gene",
+   "url": "https://www.ncbi.nlm.nih.gov/gene/?term=CFTR%5Bsym%5D"
+  },
+  "COMT": {
+   "sentence": "COMT makes an enzyme that breaks down dopamine and some drugs.",
+   "source": "NCBI Gene",
+   "url": "https://www.ncbi.nlm.nih.gov/gene/?term=COMT%5Bsym%5D"
+  },
+  "CYP1A2": {
+   "sentence": "CYP1A2 makes a liver enzyme that breaks down caffeine and some drugs.",
+   "source": "NCBI Gene",
+   "url": "https://www.ncbi.nlm.nih.gov/gene/?term=CYP1A2%5Bsym%5D"
+  },
+  "CYP21A2": {
+   "sentence": "CYP21A2 makes an adrenal enzyme needed to make cortisol.",
+   "source": "NCBI Gene",
+   "url": "https://www.ncbi.nlm.nih.gov/gene/?term=CYP21A2%5Bsym%5D"
+  },
+  "CYP2B6": {
+   "sentence": "CYP2B6 makes a liver enzyme that breaks down some drugs.",
+   "source": "NCBI Gene",
+   "url": "https://www.ncbi.nlm.nih.gov/gene/?term=CYP2B6%5Bsym%5D"
+  },
+  "CYP2C19": {
+   "sentence": "CYP2C19 makes a liver enzyme that activates or clears several common drugs.",
+   "source": "NCBI Gene",
+   "url": "https://www.ncbi.nlm.nih.gov/gene/?term=CYP2C19%5Bsym%5D"
+  },
+  "CYP2C8": {
+   "sentence": "CYP2C8 makes a liver enzyme that breaks down some drugs.",
+   "source": "NCBI Gene",
+   "url": "https://www.ncbi.nlm.nih.gov/gene/?term=CYP2C8%5Bsym%5D"
+  },
+  "CYP2C9": {
+   "sentence": "CYP2C9 makes a liver enzyme that clears warfarin and some other drugs.",
+   "source": "NCBI Gene",
+   "url": "https://www.ncbi.nlm.nih.gov/gene/?term=CYP2C9%5Bsym%5D"
+  },
+  "CYP2D6": {
+   "sentence": "CYP2D6 makes a liver enzyme that clears many antidepressants and pain drugs.",
+   "source": "NCBI Gene",
+   "url": "https://www.ncbi.nlm.nih.gov/gene/?term=CYP2D6%5Bsym%5D"
+  },
+  "CYP3A4": {
+   "sentence": "CYP3A4 makes the liver enzyme that clears about half of all drugs.",
+   "source": "NCBI Gene",
+   "url": "https://www.ncbi.nlm.nih.gov/gene/?term=CYP3A4%5Bsym%5D"
+  },
+  "CYP3A5": {
+   "sentence": "CYP3A5 makes a liver enzyme that clears tacrolimus and some other drugs.",
+   "source": "NCBI Gene",
+   "url": "https://www.ncbi.nlm.nih.gov/gene/?term=CYP3A5%5Bsym%5D"
+  },
+  "CYP4F2": {
+   "sentence": "CYP4F2 makes an enzyme that breaks down vitamin K.",
+   "source": "NCBI Gene",
+   "url": "https://www.ncbi.nlm.nih.gov/gene/?term=CYP4F2%5Bsym%5D"
+  },
+  "DHCR7": {
+   "sentence": "DHCR7 makes the last enzyme in the pathway that builds cholesterol.",
+   "source": "NCBI Gene",
+   "url": "https://www.ncbi.nlm.nih.gov/gene/?term=DHCR7%5Bsym%5D"
+  },
+  "DMD": {
+   "sentence": "DMD makes dystrophin, which anchors muscle fibres to their surroundings.",
+   "source": "NCBI Gene",
+   "url": "https://www.ncbi.nlm.nih.gov/gene/?term=DMD%5Bsym%5D"
+  },
+  "DPYD": {
+   "sentence": "DPYD makes the enzyme that clears the chemotherapy drug fluorouracil.",
+   "source": "NCBI Gene",
+   "url": "https://www.ncbi.nlm.nih.gov/gene/?term=DPYD%5Bsym%5D"
+  },
+  "ELP1": {
+   "sentence": "ELP1 makes a protein that nerve cells need during development.",
+   "source": "NCBI Gene",
+   "url": "https://www.ncbi.nlm.nih.gov/gene/?term=ELP1%5Bsym%5D"
+  },
+  "F2": {
+   "sentence": "F2 makes prothrombin, a clotting factor in the blood.",
+   "source": "NCBI Gene",
+   "url": "https://www.ncbi.nlm.nih.gov/gene/?term=F2%5Bsym%5D"
+  },
+  "F5": {
+   "sentence": "F5 makes factor V, a clotting factor in the blood.",
+   "source": "NCBI Gene",
+   "url": "https://www.ncbi.nlm.nih.gov/gene/?term=F5%5Bsym%5D"
+  },
+  "FANCC": {
+   "sentence": "FANCC makes a protein in the pathway that repairs DNA crosslinks.",
+   "source": "NCBI Gene",
+   "url": "https://www.ncbi.nlm.nih.gov/gene/?term=FANCC%5Bsym%5D"
+  },
+  "FMR1": {
+   "sentence": "FMR1 makes a protein that nerve cells need to build synapses.",
+   "source": "NCBI Gene",
+   "url": "https://www.ncbi.nlm.nih.gov/gene/?term=FMR1%5Bsym%5D"
+  },
+  "G6PC": {
+   "sentence": "G6PC makes a liver enzyme that releases stored glucose into the blood.",
+   "source": "NCBI Gene",
+   "url": "https://www.ncbi.nlm.nih.gov/gene/?term=G6PC%5Bsym%5D"
+  },
+  "G6PD": {
+   "sentence": "G6PD makes an enzyme that protects red blood cells from oxidative damage.",
+   "source": "NCBI Gene",
+   "url": "https://www.ncbi.nlm.nih.gov/gene/?term=G6PD%5Bsym%5D"
+  },
+  "GALT": {
+   "sentence": "GALT makes an enzyme that processes the milk sugar galactose.",
+   "source": "NCBI Gene",
+   "url": "https://www.ncbi.nlm.nih.gov/gene/?term=GALT%5Bsym%5D"
+  },
+  "GBA": {
+   "sentence": "GBA makes an enzyme that breaks down a fatty substance inside cells.",
+   "source": "NCBI Gene",
+   "url": "https://www.ncbi.nlm.nih.gov/gene/?term=GBA%5Bsym%5D"
+  },
+  "GJB2": {
+   "sentence": "GJB2 makes a channel protein that inner ear cells use to pass ions.",
+   "source": "NCBI Gene",
+   "url": "https://www.ncbi.nlm.nih.gov/gene/?term=GJB2%5Bsym%5D"
+  },
+  "HBA1": {
+   "sentence": "HBA1 makes an alpha chain of haemoglobin, the oxygen carrier in blood.",
+   "source": "NCBI Gene",
+   "url": "https://www.ncbi.nlm.nih.gov/gene/?term=HBA1%5Bsym%5D"
+  },
+  "HBA2": {
+   "sentence": "HBA2 makes an alpha chain of haemoglobin, the oxygen carrier in blood.",
+   "source": "NCBI Gene",
+   "url": "https://www.ncbi.nlm.nih.gov/gene/?term=HBA2%5Bsym%5D"
+  },
+  "HBB": {
+   "sentence": "HBB makes the beta chain of haemoglobin, the oxygen carrier in blood.",
+   "source": "NCBI Gene",
+   "url": "https://www.ncbi.nlm.nih.gov/gene/?term=HBB%5Bsym%5D"
+  },
+  "HEXA": {
+   "sentence": "HEXA makes an enzyme that breaks down a fatty substance in nerve cells.",
+   "source": "NCBI Gene",
+   "url": "https://www.ncbi.nlm.nih.gov/gene/?term=HEXA%5Bsym%5D"
+  },
+  "HLA-A": {
+   "sentence": "HLA-A makes an immune protein that presents protein fragments to T cells.",
+   "source": "NCBI Gene",
+   "url": "https://www.ncbi.nlm.nih.gov/gene/?term=HLA-A%5Bsym%5D"
+  },
+  "HLA-B": {
+   "sentence": "HLA-B makes an immune protein that presents protein fragments to T cells.",
+   "source": "NCBI Gene",
+   "url": "https://www.ncbi.nlm.nih.gov/gene/?term=HLA-B%5Bsym%5D"
+  },
+  "HTT": {
+   "sentence": "HTT makes huntingtin. A repeat expansion in it causes Huntington disease.",
+   "source": "NCBI Gene",
+   "url": "https://www.ncbi.nlm.nih.gov/gene/?term=HTT%5Bsym%5D"
+  },
+  "IDUA": {
+   "sentence": "IDUA makes an enzyme that breaks down long sugar chains inside cells.",
+   "source": "NCBI Gene",
+   "url": "https://www.ncbi.nlm.nih.gov/gene/?term=IDUA%5Bsym%5D"
+  },
+  "IFNL3": {
+   "sentence": "IFNL3 makes an interferon, a signalling protein of the antiviral response.",
+   "source": "NCBI Gene",
+   "url": "https://www.ncbi.nlm.nih.gov/gene/?term=IFNL3%5Bsym%5D"
+  },
+  "LRRK2": {
+   "sentence": "LRRK2 makes a kinase active in nerve cells and immune cells.",
+   "source": "NCBI Gene",
+   "url": "https://www.ncbi.nlm.nih.gov/gene/?term=LRRK2%5Bsym%5D"
+  },
+  "MAPT": {
+   "sentence": "MAPT makes tau, a protein that stabilises the skeleton of nerve cells.",
+   "source": "NCBI Gene",
+   "url": "https://www.ncbi.nlm.nih.gov/gene/?term=MAPT%5Bsym%5D"
+  },
+  "MCOLN1": {
+   "sentence": "MCOLN1 makes an ion channel in the cell's recycling compartments.",
+   "source": "NCBI Gene",
+   "url": "https://www.ncbi.nlm.nih.gov/gene/?term=MCOLN1%5Bsym%5D"
+  },
+  "MMUT": {
+   "sentence": "MMUT makes an enzyme that processes certain fats and amino acids.",
+   "source": "NCBI Gene",
+   "url": "https://www.ncbi.nlm.nih.gov/gene/?term=MMUT%5Bsym%5D"
+  },
+  "MTHFR": {
+   "sentence": "MTHFR makes an enzyme that processes folate for use in the body.",
+   "source": "NCBI Gene",
+   "url": "https://www.ncbi.nlm.nih.gov/gene/?term=MTHFR%5Bsym%5D"
+  },
+  "NAT2": {
+   "sentence": "NAT2 makes a liver enzyme that clears some drugs and chemicals.",
+   "source": "NCBI Gene",
+   "url": "https://www.ncbi.nlm.nih.gov/gene/?term=NAT2%5Bsym%5D"
+  },
+  "NOTCH3": {
+   "sentence": "NOTCH3 makes a receptor on the muscle cells of small blood vessels.",
+   "source": "NCBI Gene",
+   "url": "https://www.ncbi.nlm.nih.gov/gene/?term=NOTCH3%5Bsym%5D"
+  },
+  "NPC1": {
+   "sentence": "NPC1 makes a protein that moves cholesterol out of cell compartments.",
+   "source": "NCBI Gene",
+   "url": "https://www.ncbi.nlm.nih.gov/gene/?term=NPC1%5Bsym%5D"
+  },
+  "NUDT15": {
+   "sentence": "NUDT15 makes an enzyme that clears thiopurine drugs.",
+   "source": "NCBI Gene",
+   "url": "https://www.ncbi.nlm.nih.gov/gene/?term=NUDT15%5Bsym%5D"
+  },
+  "PAH": {
+   "sentence": "PAH makes the liver enzyme that processes the amino acid phenylalanine.",
+   "source": "NCBI Gene",
+   "url": "https://www.ncbi.nlm.nih.gov/gene/?term=PAH%5Bsym%5D"
+  },
+  "PKD1": {
+   "sentence": "PKD1 makes a protein on kidney cells that senses fluid flow.",
+   "source": "NCBI Gene",
+   "url": "https://www.ncbi.nlm.nih.gov/gene/?term=PKD1%5Bsym%5D"
+  },
+  "PKD2": {
+   "sentence": "PKD2 makes a channel on kidney cells that works with the PKD1 protein.",
+   "source": "NCBI Gene",
+   "url": "https://www.ncbi.nlm.nih.gov/gene/?term=PKD2%5Bsym%5D"
+  },
+  "POLG": {
+   "sentence": "POLG makes the enzyme that copies DNA inside mitochondria.",
+   "source": "NCBI Gene",
+   "url": "https://www.ncbi.nlm.nih.gov/gene/?term=POLG%5Bsym%5D"
+  },
+  "PROC": {
+   "sentence": "PROC makes protein C, which limits blood clotting.",
+   "source": "NCBI Gene",
+   "url": "https://www.ncbi.nlm.nih.gov/gene/?term=PROC%5Bsym%5D"
+  },
+  "PROS1": {
+   "sentence": "PROS1 makes protein S, which helps protein C limit blood clotting.",
+   "source": "NCBI Gene",
+   "url": "https://www.ncbi.nlm.nih.gov/gene/?term=PROS1%5Bsym%5D"
+  },
+  "PSEN1": {
+   "sentence": "PSEN1 makes part of the enzyme that cuts amyloid precursor protein.",
+   "source": "NCBI Gene",
+   "url": "https://www.ncbi.nlm.nih.gov/gene/?term=PSEN1%5Bsym%5D"
+  },
+  "PSEN2": {
+   "sentence": "PSEN2 makes part of the enzyme that cuts amyloid precursor protein.",
+   "source": "NCBI Gene",
+   "url": "https://www.ncbi.nlm.nih.gov/gene/?term=PSEN2%5Bsym%5D"
+  },
+  "SCN1A": {
+   "sentence": "SCN1A makes a sodium channel that nerve cells use to fire.",
+   "source": "NCBI Gene",
+   "url": "https://www.ncbi.nlm.nih.gov/gene/?term=SCN1A%5Bsym%5D"
+  },
+  "SERPINA1": {
+   "sentence": "SERPINA1 makes alpha-1 antitrypsin, which protects the lungs from enzyme damage.",
+   "source": "NCBI Gene",
+   "url": "https://www.ncbi.nlm.nih.gov/gene/?term=SERPINA1%5Bsym%5D"
+  },
+  "SERPINC1": {
+   "sentence": "SERPINC1 makes antithrombin, which limits blood clotting.",
+   "source": "NCBI Gene",
+   "url": "https://www.ncbi.nlm.nih.gov/gene/?term=SERPINC1%5Bsym%5D"
+  },
+  "SLC26A4": {
+   "sentence": "SLC26A4 makes a transporter in the inner ear and thyroid.",
+   "source": "NCBI Gene",
+   "url": "https://www.ncbi.nlm.nih.gov/gene/?term=SLC26A4%5Bsym%5D"
+  },
+  "SLCO1B1": {
+   "sentence": "SLCO1B1 makes a liver transporter that takes up statins and other drugs.",
+   "source": "NCBI Gene",
+   "url": "https://www.ncbi.nlm.nih.gov/gene/?term=SLCO1B1%5Bsym%5D"
+  },
+  "SMN1": {
+   "sentence": "SMN1 makes a protein that motor neurons need to survive.",
+   "source": "NCBI Gene",
+   "url": "https://www.ncbi.nlm.nih.gov/gene/?term=SMN1%5Bsym%5D"
+  },
+  "SMPD1": {
+   "sentence": "SMPD1 makes an enzyme that breaks down a fatty substance inside cells.",
+   "source": "NCBI Gene",
+   "url": "https://www.ncbi.nlm.nih.gov/gene/?term=SMPD1%5Bsym%5D"
+  },
+  "SNCA": {
+   "sentence": "SNCA makes alpha-synuclein, a protein found in Parkinson disease deposits.",
+   "source": "NCBI Gene",
+   "url": "https://www.ncbi.nlm.nih.gov/gene/?term=SNCA%5Bsym%5D"
+  },
+  "SOD1": {
+   "sentence": "SOD1 makes an enzyme that clears reactive oxygen inside cells.",
+   "source": "NCBI Gene",
+   "url": "https://www.ncbi.nlm.nih.gov/gene/?term=SOD1%5Bsym%5D"
+  },
+  "TPMT": {
+   "sentence": "TPMT makes an enzyme that clears thiopurine drugs.",
+   "source": "NCBI Gene",
+   "url": "https://www.ncbi.nlm.nih.gov/gene/?term=TPMT%5Bsym%5D"
+  },
+  "UGT1A1": {
+   "sentence": "UGT1A1 makes a liver enzyme that clears bilirubin and some drugs.",
+   "source": "NCBI Gene",
+   "url": "https://www.ncbi.nlm.nih.gov/gene/?term=UGT1A1%5Bsym%5D"
+  },
+  "VKORC1": {
+   "sentence": "VKORC1 makes the enzyme that recycles vitamin K, which warfarin blocks.",
+   "source": "NCBI Gene",
+   "url": "https://www.ncbi.nlm.nih.gov/gene/?term=VKORC1%5Bsym%5D"
+  }
+ }
+}

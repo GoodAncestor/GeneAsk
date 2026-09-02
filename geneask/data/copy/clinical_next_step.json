@@ -1,0 +1,40 @@
+{
+ "version": "1",
+ "reviewed_by": [],
+ "reviewed_on": null,
+ "note": "Keyed class|platform|zygosity. Classes: plp vus conflicting benign drug_response risk_factor other. Platforms: wgs_wes array. Templates take {stars} and {platform_words}.",
+ "rows": {
+  "plp|wgs_wes|any": {
+   "how_sure": "ClinVar rates the classification {stars} of 4 review stars. The call came from {platform_words}, which reads this kind of change reliably.",
+   "next_step": "Confirm the result with a clinical laboratory test before you act on it. Ask a doctor about a referral to genetic counselling."
+  },
+  "plp|array|any": {
+   "how_sure": "ClinVar rates the classification {stars} of 4 review stars. The call came from a consumer genotyping array. Arrays misread rare changes often, so this call is provisional.",
+   "next_step": "Do not act on this result alone. Ask a doctor for a clinical test that reads the change directly."
+  },
+  "vus|any|any": {
+   "how_sure": "Laboratories have not settled what this change does. ClinVar records it as uncertain.",
+   "next_step": "No action follows from an uncertain change. Laboratories reclassify these over time, so a clinician can check again later."
+  },
+  "conflicting|any|any": {
+   "how_sure": "Laboratories disagree about this change. ClinVar records the disagreement rather than a verdict.",
+   "next_step": "No action follows from a contested change. A genetic counsellor can explain what the disagreement is about."
+  },
+  "benign|any|any": {
+   "how_sure": "ClinVar rates the classification {stars} of 4 review stars.",
+   "next_step": "This classification says the change does not cause the named condition. It says nothing about other causes of that condition."
+  },
+  "drug_response|any|any": {
+   "how_sure": "ClinVar records a drug-response effect for this change, with {stars} of 4 review stars.",
+   "next_step": "Tell a prescriber about this result before you start a medicine it affects. A pharmacist can check the current guidance."
+  },
+  "risk_factor|any|any": {
+   "how_sure": "ClinVar records this change as a risk factor, with {stars} of 4 review stars. A risk factor shifts odds. It does not decide an outcome.",
+   "next_step": "Discuss this with a doctor if the condition runs in your family."
+  },
+  "other|any|any": {
+   "how_sure": "ClinVar records an association without a classification.",
+   "next_step": ""
+  }
+ }
+}

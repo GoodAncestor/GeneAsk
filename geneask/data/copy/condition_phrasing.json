@@ -1,0 +1,413 @@
+{
+ "version": "1",
+ "reviewed_by": [],
+ "reviewed_on": null,
+ "note": "Keyed by MedGen id where known, else by gene. Names in plain form; inheritance from ACMG SF v3.2 (PMID:37347242).",
+ "rows": {
+  "APC": {
+   "name": "Familial adenomatous polyposis",
+   "inheritance": "dominant",
+   "url": "https://www.ncbi.nlm.nih.gov/medgen/?term=Familial+adenomatous+polyposis"
+  },
+  "MYH11": {
+   "name": "Familial thoracic aortic aneurysm",
+   "inheritance": "dominant",
+   "url": "https://www.ncbi.nlm.nih.gov/medgen/?term=Familial+thoracic+aortic+aneurysm"
+  },
+  "ACTA2": {
+   "name": "Familial thoracic aortic aneurysm",
+   "inheritance": "dominant",
+   "url": "https://www.ncbi.nlm.nih.gov/medgen/?term=Familial+thoracic+aortic+aneurysm"
+  },
+  "TMEM43": {
+   "name": "Arrhythmogenic right ventricular cardiomyopathy",
+   "inheritance": "dominant",
+   "url": "https://www.ncbi.nlm.nih.gov/medgen/?term=Arrhythmogenic+right+ventricular+cardiomyopathy"
+  },
+  "DSP": {
+   "name": "Arrhythmogenic right ventricular cardiomyopathy",
+   "inheritance": "dominant",
+   "url": "https://www.ncbi.nlm.nih.gov/medgen/?term=Arrhythmogenic+right+ventricular+cardiomyopathy"
+  },
+  "PKP2": {
+   "name": "Arrhythmogenic right ventricular cardiomyopathy",
+   "inheritance": "dominant",
+   "url": "https://www.ncbi.nlm.nih.gov/medgen/?term=Arrhythmogenic+right+ventricular+cardiomyopathy"
+  },
+  "DSG2": {
+   "name": "Arrhythmogenic right ventricular cardiomyopathy",
+   "inheritance": "dominant",
+   "url": "https://www.ncbi.nlm.nih.gov/medgen/?term=Arrhythmogenic+right+ventricular+cardiomyopathy"
+  },
+  "DSC2": {
+   "name": "Arrhythmogenic right ventricular cardiomyopathy",
+   "inheritance": "dominant",
+   "url": "https://www.ncbi.nlm.nih.gov/medgen/?term=Arrhythmogenic+right+ventricular+cardiomyopathy"
+  },
+  "BTD": {
+   "name": "Biotinidase deficiency",
+   "inheritance": "recessive",
+   "url": "https://www.ncbi.nlm.nih.gov/medgen/?term=Biotinidase+deficiency"
+  },
+  "BRCA1": {
+   "name": "Hereditary breast and ovarian cancer syndrome",
+   "inheritance": "dominant",
+   "url": "https://www.ncbi.nlm.nih.gov/medgen/?term=Hereditary+breast+and+ovarian+cancer+syndrome"
+  },
+  "BRCA2": {
+   "name": "Hereditary breast and ovarian cancer syndrome",
+   "inheritance": "dominant",
+   "url": "https://www.ncbi.nlm.nih.gov/medgen/?term=Hereditary+breast+and+ovarian+cancer+syndrome"
+  },
+  "SCN5A": {
+   "name": "Brugada syndrome",
+   "inheritance": "dominant",
+   "url": "https://www.ncbi.nlm.nih.gov/medgen/?term=Brugada+syndrome"
+  },
+  "RYR2": {
+   "name": "Catecholaminergic polymorphic ventricular tachycardia",
+   "inheritance": "dominant",
+   "url": "https://www.ncbi.nlm.nih.gov/medgen/?term=Catecholaminergic+polymorphic+ventricular+tachycardia"
+  },
+  "CASQ2": {
+   "name": "Catecholaminergic polymorphic ventricular tachycardia",
+   "inheritance": "recessive",
+   "url": "https://www.ncbi.nlm.nih.gov/medgen/?term=Catecholaminergic+polymorphic+ventricular+tachycardia"
+  },
+  "CALM1": {
+   "name": "Catecholaminergic polymorphic ventricular tachycardia",
+   "inheritance": "dominant",
+   "url": "https://www.ncbi.nlm.nih.gov/medgen/?term=Catecholaminergic+polymorphic+ventricular+tachycardia"
+  },
+  "TRDN": {
+   "name": "Catecholaminergic polymorphic ventricular tachycardia",
+   "inheritance": "recessive",
+   "url": "https://www.ncbi.nlm.nih.gov/medgen/?term=Catecholaminergic+polymorphic+ventricular+tachycardia"
+  },
+  "FLNC": {
+   "name": "Dilated cardiomyopathy",
+   "inheritance": "dominant",
+   "url": "https://www.ncbi.nlm.nih.gov/medgen/?term=Dilated+cardiomyopathy"
+  },
+  "LMNA": {
+   "name": "Dilated cardiomyopathy",
+   "inheritance": "dominant",
+   "url": "https://www.ncbi.nlm.nih.gov/medgen/?term=Dilated+cardiomyopathy"
+  },
+  "TNNT2": {
+   "name": "Dilated cardiomyopathy",
+   "inheritance": "dominant",
+   "url": "https://www.ncbi.nlm.nih.gov/medgen/?term=Dilated+cardiomyopathy"
+  },
+  "DES": {
+   "name": "Dilated cardiomyopathy",
+   "inheritance": "dominant",
+   "url": "https://www.ncbi.nlm.nih.gov/medgen/?term=Dilated+cardiomyopathy"
+  },
+  "MYH7": {
+   "name": "Dilated cardiomyopathy",
+   "inheritance": "dominant",
+   "url": "https://www.ncbi.nlm.nih.gov/medgen/?term=Dilated+cardiomyopathy"
+  },
+  "TNNC1": {
+   "name": "Dilated cardiomyopathy",
+   "inheritance": "dominant",
+   "url": "https://www.ncbi.nlm.nih.gov/medgen/?term=Dilated+cardiomyopathy"
+  },
+  "RBM20": {
+   "name": "Dilated cardiomyopathy",
+   "inheritance": "dominant",
+   "url": "https://www.ncbi.nlm.nih.gov/medgen/?term=Dilated+cardiomyopathy"
+  },
+  "BAG3": {
+   "name": "Dilated cardiomyopathy",
+   "inheritance": "dominant",
+   "url": "https://www.ncbi.nlm.nih.gov/medgen/?term=Dilated+cardiomyopathy"
+  },
+  "TTN": {
+   "name": "Dilated cardiomyopathy",
+   "inheritance": "dominant",
+   "url": "https://www.ncbi.nlm.nih.gov/medgen/?term=Dilated+cardiomyopathy"
+  },
+  "COL3A1": {
+   "name": "Vascular Ehlers-Danlos syndrome",
+   "inheritance": "dominant",
+   "url": "https://www.ncbi.nlm.nih.gov/medgen/?term=Vascular+Ehlers-Danlos+syndrome"
+  },
+  "GLA": {
+   "name": "Fabry disease",
+   "inheritance": "x_linked",
+   "url": "https://www.ncbi.nlm.nih.gov/medgen/?term=Fabry+disease"
+  },
+  "LDLR": {
+   "name": "Familial hypercholesterolemia",
+   "inheritance": "dominant",
+   "url": "https://www.ncbi.nlm.nih.gov/medgen/?term=Familial+hypercholesterolemia"
+  },
+  "APOB": {
+   "name": "Familial hypercholesterolemia",
+   "inheritance": "dominant",
+   "url": "https://www.ncbi.nlm.nih.gov/medgen/?term=Familial+hypercholesterolemia"
+  },
+  "TPM1": {
+   "name": "Hypertrophic cardiomyopathy",
+   "inheritance": "dominant",
+   "url": "https://www.ncbi.nlm.nih.gov/medgen/?term=Hypertrophic+cardiomyopathy"
+  },
+  "MYBPC3": {
+   "name": "Hypertrophic cardiomyopathy",
+   "inheritance": "dominant",
+   "url": "https://www.ncbi.nlm.nih.gov/medgen/?term=Hypertrophic+cardiomyopathy"
+  },
+  "PRKAG2": {
+   "name": "Hypertrophic cardiomyopathy",
+   "inheritance": "dominant",
+   "url": "https://www.ncbi.nlm.nih.gov/medgen/?term=Hypertrophic+cardiomyopathy"
+  },
+  "TNNI3": {
+   "name": "Hypertrophic cardiomyopathy",
+   "inheritance": "dominant",
+   "url": "https://www.ncbi.nlm.nih.gov/medgen/?term=Hypertrophic+cardiomyopathy"
+  },
+  "MYL3": {
+   "name": "Hypertrophic cardiomyopathy",
+   "inheritance": "dominant",
+   "url": "https://www.ncbi.nlm.nih.gov/medgen/?term=Hypertrophic+cardiomyopathy"
+  },
+  "MYL2": {
+   "name": "Hypertrophic cardiomyopathy",
+   "inheritance": "dominant",
+   "url": "https://www.ncbi.nlm.nih.gov/medgen/?term=Hypertrophic+cardiomyopathy"
+  },
+  "ACTC1": {
+   "name": "Hypertrophic cardiomyopathy",
+   "inheritance": "dominant",
+   "url": "https://www.ncbi.nlm.nih.gov/medgen/?term=Hypertrophic+cardiomyopathy"
+  },
+  "RET": {
+   "name": "Multiple endocrine neoplasia type 2",
+   "inheritance": "dominant",
+   "url": "https://www.ncbi.nlm.nih.gov/medgen/?term=Multiple+endocrine+neoplasia+type+2"
+  },
+  "PALB2": {
+   "name": "Hereditary breast cancer",
+   "inheritance": "dominant",
+   "url": "https://www.ncbi.nlm.nih.gov/medgen/?term=Hereditary+breast+cancer"
+  },
+  "HFE": {
+   "name": "Hereditary hemochromatosis",
+   "inheritance": "recessive",
+   "url": "https://www.ncbi.nlm.nih.gov/medgen/?term=Hereditary+hemochromatosis"
+  },
+  "ENG": {
+   "name": "Hereditary hemorrhagic telangiectasia",
+   "inheritance": "dominant",
+   "url": "https://www.ncbi.nlm.nih.gov/medgen/?term=Hereditary+hemorrhagic+telangiectasia"
+  },
+  "ACVRL1": {
+   "name": "Hereditary hemorrhagic telangiectasia",
+   "inheritance": "dominant",
+   "url": "https://www.ncbi.nlm.nih.gov/medgen/?term=Hereditary+hemorrhagic+telangiectasia"
+  },
+  "SDHD": {
+   "name": "Hereditary paraganglioma-pheochromocytoma syndrome",
+   "inheritance": "dominant",
+   "url": "https://www.ncbi.nlm.nih.gov/medgen/?term=Hereditary+paraganglioma-pheochromocytoma+syndrome"
+  },
+  "SDHB": {
+   "name": "Hereditary paraganglioma-pheochromocytoma syndrome",
+   "inheritance": "dominant",
+   "url": "https://www.ncbi.nlm.nih.gov/medgen/?term=Hereditary+paraganglioma-pheochromocytoma+syndrome"
+  },
+  "TTR": {
+   "name": "Hereditary transthyretin amyloidosis",
+   "inheritance": "dominant",
+   "url": "https://www.ncbi.nlm.nih.gov/medgen/?term=Hereditary+transthyretin+amyloidosis"
+  },
+  "PCSK9": {
+   "name": "Familial hypercholesterolemia",
+   "inheritance": "dominant",
+   "url": "https://www.ncbi.nlm.nih.gov/medgen/?term=Familial+hypercholesterolemia"
+  },
+  "BMPR1A": {
+   "name": "Juvenile polyposis syndrome",
+   "inheritance": "dominant",
+   "url": "https://www.ncbi.nlm.nih.gov/medgen/?term=Juvenile+polyposis+syndrome"
+  },
+  "SMAD4": {
+   "name": "Juvenile polyposis syndrome",
+   "inheritance": "dominant",
+   "url": "https://www.ncbi.nlm.nih.gov/medgen/?term=Juvenile+polyposis+syndrome"
+  },
+  "TP53": {
+   "name": "Li-Fraumeni syndrome",
+   "inheritance": "dominant",
+   "url": "https://www.ncbi.nlm.nih.gov/medgen/?term=Li-Fraumeni+syndrome"
+  },
+  "TGFBR1": {
+   "name": "Loeys-Dietz syndrome",
+   "inheritance": "dominant",
+   "url": "https://www.ncbi.nlm.nih.gov/medgen/?term=Loeys-Dietz+syndrome"
+  },
+  "TGFBR2": {
+   "name": "Loeys-Dietz syndrome",
+   "inheritance": "dominant",
+   "url": "https://www.ncbi.nlm.nih.gov/medgen/?term=Loeys-Dietz+syndrome"
+  },
+  "SMAD3": {
+   "name": "Loeys-Dietz syndrome",
+   "inheritance": "dominant",
+   "url": "https://www.ncbi.nlm.nih.gov/medgen/?term=Loeys-Dietz+syndrome"
+  },
+  "KCNQ1": {
+   "name": "Long QT syndrome",
+   "inheritance": "dominant",
+   "url": "https://www.ncbi.nlm.nih.gov/medgen/?term=Long+QT+syndrome"
+  },
+  "KCNH2": {
+   "name": "Long QT syndrome",
+   "inheritance": "dominant",
+   "url": "https://www.ncbi.nlm.nih.gov/medgen/?term=Long+QT+syndrome"
+  },
+  "CALM2": {
+   "name": "Long QT syndrome",
+   "inheritance": "dominant",
+   "url": "https://www.ncbi.nlm.nih.gov/medgen/?term=Long+QT+syndrome"
+  },
+  "CALM3": {
+   "name": "Long QT syndrome",
+   "inheritance": "dominant",
+   "url": "https://www.ncbi.nlm.nih.gov/medgen/?term=Long+QT+syndrome"
+  },
+  "MSH2": {
+   "name": "Lynch syndrome",
+   "inheritance": "dominant",
+   "url": "https://www.ncbi.nlm.nih.gov/medgen/?term=Lynch+syndrome"
+  },
+  "MLH1": {
+   "name": "Lynch syndrome",
+   "inheritance": "dominant",
+   "url": "https://www.ncbi.nlm.nih.gov/medgen/?term=Lynch+syndrome"
+  },
+  "PMS2": {
+   "name": "Lynch syndrome",
+   "inheritance": "dominant",
+   "url": "https://www.ncbi.nlm.nih.gov/medgen/?term=Lynch+syndrome"
+  },
+  "MSH6": {
+   "name": "Lynch syndrome",
+   "inheritance": "dominant",
+   "url": "https://www.ncbi.nlm.nih.gov/medgen/?term=Lynch+syndrome"
+  },
+  "RYR1": {
+   "name": "Malignant hyperthermia susceptibility",
+   "inheritance": "dominant",
+   "url": "https://www.ncbi.nlm.nih.gov/medgen/?term=Malignant+hyperthermia+susceptibility"
+  },
+  "CACNA1S": {
+   "name": "Malignant hyperthermia susceptibility",
+   "inheritance": "dominant",
+   "url": "https://www.ncbi.nlm.nih.gov/medgen/?term=Malignant+hyperthermia+susceptibility"
+  },
+  "FBN1": {
+   "name": "Marfan syndrome",
+   "inheritance": "dominant",
+   "url": "https://www.ncbi.nlm.nih.gov/medgen/?term=Marfan+syndrome"
+  },
+  "HNF1A": {
+   "name": "Maturity-onset diabetes of the young",
+   "inheritance": "dominant",
+   "url": "https://www.ncbi.nlm.nih.gov/medgen/?term=Maturity-onset+diabetes+of+the+young"
+  },
+  "MEN1": {
+   "name": "Multiple endocrine neoplasia type 1",
+   "inheritance": "dominant",
+   "url": "https://www.ncbi.nlm.nih.gov/medgen/?term=Multiple+endocrine+neoplasia+type+1"
+  },
+  "MUTYH": {
+   "name": "MUTYH-associated polyposis",
+   "inheritance": "recessive",
+   "url": "https://www.ncbi.nlm.nih.gov/medgen/?term=MUTYH-associated+polyposis"
+  },
+  "NF2": {
+   "name": "Neurofibromatosis type 2",
+   "inheritance": "dominant",
+   "url": "https://www.ncbi.nlm.nih.gov/medgen/?term=Neurofibromatosis+type+2"
+  },
+  "OTC": {
+   "name": "Ornithine transcarbamylase deficiency",
+   "inheritance": "x_linked",
+   "url": "https://www.ncbi.nlm.nih.gov/medgen/?term=Ornithine+transcarbamylase+deficiency"
+  },
+  "SDHAF2": {
+   "name": "Hereditary paraganglioma-pheochromocytoma syndrome",
+   "inheritance": "dominant",
+   "url": "https://www.ncbi.nlm.nih.gov/medgen/?term=Hereditary+paraganglioma-pheochromocytoma+syndrome"
+  },
+  "SDHC": {
+   "name": "Hereditary paraganglioma-pheochromocytoma syndrome",
+   "inheritance": "dominant",
+   "url": "https://www.ncbi.nlm.nih.gov/medgen/?term=Hereditary+paraganglioma-pheochromocytoma+syndrome"
+  },
+  "STK11": {
+   "name": "Peutz-Jeghers syndrome",
+   "inheritance": "dominant",
+   "url": "https://www.ncbi.nlm.nih.gov/medgen/?term=Peutz-Jeghers+syndrome"
+  },
+  "MAX": {
+   "name": "Hereditary paraganglioma-pheochromocytoma syndrome",
+   "inheritance": "dominant",
+   "url": "https://www.ncbi.nlm.nih.gov/medgen/?term=Hereditary+paraganglioma-pheochromocytoma+syndrome"
+  },
+  "TMEM127": {
+   "name": "Hereditary paraganglioma-pheochromocytoma syndrome",
+   "inheritance": "dominant",
+   "url": "https://www.ncbi.nlm.nih.gov/medgen/?term=Hereditary+paraganglioma-pheochromocytoma+syndrome"
+  },
+  "GAA": {
+   "name": "Pompe disease",
+   "inheritance": "recessive",
+   "url": "https://www.ncbi.nlm.nih.gov/medgen/?term=Pompe+disease"
+  },
+  "PTEN": {
+   "name": "PTEN hamartoma tumor syndrome",
+   "inheritance": "dominant",
+   "url": "https://www.ncbi.nlm.nih.gov/medgen/?term=PTEN+hamartoma+tumor+syndrome"
+  },
+  "RB1": {
+   "name": "Retinoblastoma",
+   "inheritance": "dominant",
+   "url": "https://www.ncbi.nlm.nih.gov/medgen/?term=Retinoblastoma"
+  },
+  "RPE65": {
+   "name": "RPE65-related retinopathy",
+   "inheritance": "recessive",
+   "url": "https://www.ncbi.nlm.nih.gov/medgen/?term=RPE65-related+retinopathy"
+  },
+  "TSC1": {
+   "name": "Tuberous sclerosis complex",
+   "inheritance": "dominant",
+   "url": "https://www.ncbi.nlm.nih.gov/medgen/?term=Tuberous+sclerosis+complex"
+  },
+  "TSC2": {
+   "name": "Tuberous sclerosis complex",
+   "inheritance": "dominant",
+   "url": "https://www.ncbi.nlm.nih.gov/medgen/?term=Tuberous+sclerosis+complex"
+  },
+  "VHL": {
+   "name": "Von Hippel-Lindau syndrome",
+   "inheritance": "dominant",
+   "url": "https://www.ncbi.nlm.nih.gov/medgen/?term=Von+Hippel-Lindau+syndrome"
+  },
+  "WT1": {
+   "name": "Wilms tumor predisposition",
+   "inheritance": "dominant",
+   "url": "https://www.ncbi.nlm.nih.gov/medgen/?term=Wilms+tumor+predisposition"
+  },
+  "ATP7B": {
+   "name": "Wilson disease",
+   "inheritance": "recessive",
+   "url": "https://www.ncbi.nlm.nih.gov/medgen/?term=Wilson+disease"
+  }
+ }
+}
