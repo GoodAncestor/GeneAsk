@@ -8,7 +8,6 @@ the report and lets the worker delete every PharmCAT intermediate with scratch.
 from __future__ import annotations
 
 import json
-import re
 import shutil
 import subprocess
 from pathlib import Path
@@ -17,13 +16,18 @@ from pathlib import Path
 PHARMCAT_VERSION = "3.4.0"
 _SEQUENCING_PLATFORMS = {"WGS", "WES"}
 
-# PharmCAT documentation was unreachable from studio8t on 2026-09-02. These
-# aliases include the fields named in the approved plan and common nested forms.
-# The Task C4 real run must confirm them against an unmodified phenotype JSON.
-_GENE_FIELDS = ("gene", "geneSymbol", "genesymbol")
-_DIPLOTYPE_FIELDS = ("diplotype", "diplotypeName", "diplotypeString")
-_PHENOTYPE_FIELDS = ("phenotype", "phenotypeName", "metabolizerStatus")
-_ACTIVITY_FIELDS = ("activityScore", "activity_score")
+# Shape of PharmCAT 3.4.0's `<sample>.phenotype.json`, read from a real run on
+# alien02 on 2026-09-02 (`matcherMetadata.namedAlleleMatcherVersion` 2.0.0):
+#   {"matcherMetadata": {...},
+#    "geneReports": {"CYP2C19": {"geneSymbol": "CYP2C19", "callSource": "MATCHER",
+#                                "recommendationDiplotypes": [{"label": "*1/*2",
+#                                    "phenotypes": ["Intermediate Metabolizer"],
+#                                    "activityScore": 1.0, ...}], ...}, ...},
+#    "unannotatedGeneCalls": [...]}
+# A gene the matcher could not call carries label "Unknown/Unknown" and
+# phenotypes ["No Result"]; that is "not called", never a result.
+_UNCALLED_LABELS = ("unknown",)
+_UNCALLED_PHENOTYPES = ("no result", "indeterminate", "")
 
 
 class DiplotypeCalls(dict):
@@ -42,37 +46,6 @@ def platform_ok(platform) -> bool:
     return str(platform or "").upper() in _SEQUENCING_PLATFORMS
 
 
-def _normal(value: str) -> str:
-    return re.sub(r"[^a-z0-9]", "", str(value or "").lower())
-
-
-def _field(record: dict, names: tuple[str, ...]):
-    wanted = {_normal(name) for name in names}
-    for key, value in record.items():
-        if _normal(key) in wanted:
-            return value
-    return None
-
-
-def _text(value) -> str:
-    if isinstance(value, str):
-        return value.strip()
-    if isinstance(value, (int, float)):
-        return str(value)
-    if isinstance(value, dict):
-        for key in ("name", "value", "label", "term"):
-            text = _text(value.get(key))
-            if text:
-                return text
-    if isinstance(value, list):
-        values = [_text(item) for item in value]
-        values = [item for item in values if item]
-        if len(values) == 2 and all(item.startswith("*") for item in values):
-            return "/".join(values)
-        return values[0] if values else ""
-    return ""
-
-
 def _activity(value):
     try:
         return None if value in (None, "") else float(value)
@@ -80,45 +53,35 @@ def _activity(value):
         return None
 
 
-def _looks_like_gene(value: str) -> bool:
-    return bool(re.fullmatch(r"[A-Z][A-Z0-9-]{1,14}", str(value or "")))
-
-
-def _records(value, inherited_gene: str = ""):
-    if isinstance(value, list):
-        for item in value:
-            yield from _records(item, inherited_gene)
-        return
-    if not isinstance(value, dict):
-        return
-
-    gene = _text(_field(value, _GENE_FIELDS)) or inherited_gene
-    diplotype = _text(_field(value, _DIPLOTYPE_FIELDS))
-    phenotype = _text(_field(value, _PHENOTYPE_FIELDS))
-    if gene and diplotype and phenotype:
-        yield {
-            "gene": gene.upper(),
-            "diplotype": diplotype,
-            "phenotype": phenotype,
-            "activity_score": _activity(_field(value, _ACTIVITY_FIELDS)),
-        }
-
-    for key, child in value.items():
-        child_gene = gene
-        if not child_gene and _looks_like_gene(key) and isinstance(child, (dict, list)):
-            child_gene = key
-        yield from _records(child, child_gene)
+def _called(diplotype: dict) -> dict | None:
+    """One recommendation diplotype as a call, or None when it is not a call."""
+    label = str(diplotype.get("label") or "").strip()
+    phenotypes = [str(x).strip() for x in (diplotype.get("phenotypes") or []) if str(x).strip()]
+    phenotype = phenotypes[0] if phenotypes else ""
+    if not label or any(u in label.lower() for u in _UNCALLED_LABELS):
+        return None
+    if phenotype.lower() in _UNCALLED_PHENOTYPES:
+        return None
+    return {"diplotype": label, "phenotype": phenotype,
+            "activity_score": _activity(diplotype.get("activityScore"))}
 
 
 def _parse(document) -> DiplotypeCalls:
     calls = DiplotypeCalls()
-    for record in _records(document):
-        calls[record["gene"]] = {
-            "diplotype": record["diplotype"],
-            "phenotype": record["phenotype"],
-            "activity_score": record["activity_score"],
-            "source": f"PharmCAT {PHARMCAT_VERSION}",
-        }
+    reports = (document or {}).get("geneReports") if isinstance(document, dict) else None
+    if not isinstance(reports, dict):
+        return calls
+    for gene, entry in reports.items():
+        if not isinstance(entry, dict):
+            continue
+        symbol = str(entry.get("geneSymbol") or gene).upper()
+        for diplotype in entry.get("recommendationDiplotypes") or []:
+            if not isinstance(diplotype, dict):
+                continue
+            call = _called(diplotype)
+            if call:
+                calls[symbol] = {**call, "source": f"PharmCAT {PHARMCAT_VERSION}"}
+                break
     return calls
 
 

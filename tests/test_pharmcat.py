@@ -1,7 +1,7 @@
-"""PharmCAT phenotype parsing against the plan-named JSON fields.
+"""PharmCAT phenotype parsing against the real 3.4.0 JSON shape.
 
-The official documentation was unreachable from the L6 sandbox. The fixture
-uses geneSymbol, diplotype, phenotype, and activityScore from the approved plan.
+The fixture is trimmed from a real run on alien02 (2026-09-02); two genes are
+edited to called values in the same shape so a call is exercised.
 """
 import shutil
 import subprocess
@@ -80,3 +80,12 @@ def test_pipeline_timeout_returns_empty_calls_with_a_note(monkeypatch, tmp_path)
 
     assert calls == {}
     assert "1-second limit" in calls.note
+
+
+def test_uncalled_genes_are_absent_not_results(monkeypatch, tmp_path):
+    shutil.copyfile(FIXTURE, tmp_path / "x.phenotype.json")
+    monkeypatch.setattr(pharmcat.subprocess, "run",
+                        lambda command, **kw: subprocess.CompletedProcess(command, 0, "", ""))
+    calls = pharmcat.call_diplotypes("sample.vcf", str(tmp_path))
+    assert "ABCG2" not in calls and "SLCO1B1" not in calls
+    assert set(calls) == {"CYP2C19", "CYP2D6"}

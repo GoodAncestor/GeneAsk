@@ -1,16 +1,101 @@
 {
-  "phenotypes": [
+ "_note": "Trimmed from a real PharmCAT 3.4.0 run on alien02, 2026-09-02, on the demo VCF (no PGx variants: every gene Unknown/No Result). CYP2C19 and CYP2D6 below are edited to called values in the same shape, so the parser is tested on a call.",
+ "matcherMetadata": {
+  "namedAlleleMatcherVersion": "2.0.0",
+  "genomeBuild": "GRCh38.p14",
+  "inputFilename": "demo.vcf",
+  "timestamp": "2026-09-02T20:16:57.466Z",
+  "topCandidatesOnly": true,
+  "findCombinations": false,
+  "callCyp2d": false,
+  "sampleId": "SAMPLE1",
+  "sampleProps": null
+ },
+ "geneReports": {
+  "ABCG2": {
+   "alleleDefinitionVersion": "2026-07-13-11-40",
+   "geneSymbol": "ABCG2",
+   "chr": "chr4",
+   "phased": false,
+   "callSource": "MATCHER",
+   "recommendationDiplotypes": [
     {
-      "geneSymbol": "CYP2C19",
-      "diplotype": "*1/*2",
-      "phenotype": "Intermediate Metabolizer",
-      "activityScore": 1.0
-    },
-    {
-      "geneSymbol": "CYP2D6",
-      "diplotype": "*1/*4",
-      "phenotype": "Intermediate Metabolizer",
-      "activityScore": 1.0
+     "gene": "ABCG2",
+     "label": "Unknown/Unknown",
+     "phenotypes": [
+      "No Result"
+     ],
+     "activityScore": null,
+     "lookupKey": [
+      "No Result"
+     ],
+     "inferred": false
     }
-  ]
+   ]
+  },
+  "CYP2C19": {
+   "alleleDefinitionVersion": "2026-07-13-11-40",
+   "geneSymbol": "CYP2C19",
+   "chr": "chr10",
+   "phased": false,
+   "callSource": "MATCHER",
+   "recommendationDiplotypes": [
+    {
+     "gene": "CYP2C19",
+     "label": "*1/*2",
+     "phenotypes": [
+      "Intermediate Metabolizer"
+     ],
+     "activityScore": 1.0,
+     "lookupKey": [
+      "Intermediate Metabolizer"
+     ],
+     "inferred": false
+    }
+   ]
+  },
+  "CYP2D6": {
+   "alleleDefinitionVersion": null,
+   "geneSymbol": "CYP2D6",
+   "chr": null,
+   "phased": false,
+   "callSource": "NONE",
+   "recommendationDiplotypes": [
+    {
+     "gene": "CYP2D6",
+     "label": "*1/*4",
+     "phenotypes": [
+      "Intermediate Metabolizer"
+     ],
+     "activityScore": 1.0,
+     "lookupKey": [
+      "No Result"
+     ],
+     "inferred": false
+    }
+   ]
+  },
+  "SLCO1B1": {
+   "alleleDefinitionVersion": "2026-07-13-11-40",
+   "geneSymbol": "SLCO1B1",
+   "chr": "chr12",
+   "phased": false,
+   "callSource": "MATCHER",
+   "recommendationDiplotypes": [
+    {
+     "gene": "SLCO1B1",
+     "label": "Unknown/Unknown",
+     "phenotypes": [
+      "No Result"
+     ],
+     "activityScore": null,
+     "lookupKey": [
+      "No Result"
+     ],
+     "inferred": false
+    }
+   ]
+  }
+ },
+ "unannotatedGeneCalls": []
 }
