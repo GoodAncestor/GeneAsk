@@ -128,6 +128,37 @@ def _chain_clinvar(f: Finding, ip: Interpretation) -> list[ChainLink]:
     if acmg_sf(gene):
         chain.append(ChainLink(kind="paper", label=f"ACMG {ACMG_SF_VERSION} reportable gene",
                                url=ACMG_SF_URL))
+    from geneask.annotators import clingen
+    clingen_rows = clingen.lookup(gene).get("validity", [])
+    condition_ids = {str(identifier).upper() for identifier in ip.condition_ids}
+    matching = [
+        row
+        for row in clingen_rows
+        if str(row.get("mondo") or "").upper() in condition_ids
+    ]
+    validity = (matching or clingen_rows or [None])[0]
+    if validity:
+        classification = str(validity.get("classification") or "").strip()
+        disease = str(validity.get("disease") or "").strip()
+        if classification and disease:
+            chain.append(
+                ChainLink(
+                    kind="assertion",
+                    label=f"ClinGen: {classification} for {disease}",
+                    url=validity.get("report_url") or None,
+                )
+            )
+    actionability = clingen.actionability_for(gene)
+    if actionability and actionability.get("score") is not None:
+        score = float(actionability["score"])
+        score_label = str(int(score)) if score.is_integer() else f"{score:g}"
+        chain.append(
+            ChainLink(
+                kind="paper",
+                label=f"ClinGen actionability score {score_label}",
+                url=actionability.get("report_url") or None,
+            )
+        )
     for p in f.pmids or []:
         chain.append(ChainLink(kind="paper", label=f"PMID {p}", id=f"PMID:{p}",
                                url=f"https://pubmed.ncbi.nlm.nih.gov/{p}/"))

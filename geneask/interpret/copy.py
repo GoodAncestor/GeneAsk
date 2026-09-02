@@ -83,17 +83,29 @@ def gene_function(gene: str) -> dict | None:
 
 
 def condition_phrase(condition_ids: list[str], fallback_name: str, gene: str) -> dict:
-    """{name, inheritance, url}. Looks up condition ids first, then the gene,
-    then falls back to the ClinVar name with no inheritance."""
+    """Return the condition name, ClinGen inheritance, and reviewed URL."""
     rows = _load("condition_phrasing")["rows"]
+    row = None
     for cid in condition_ids or []:
         if cid in rows:
-            return dict(rows[cid])
-    row = rows.get((gene or "").strip().upper())
+            row = dict(rows[cid])
+            break
+    if row is None:
+        by_gene = rows.get((gene or "").strip().upper())
+        row = dict(by_gene) if by_gene else None
+
+    from geneask.annotators import clingen
+    inheritance = clingen.inheritance_for(gene, condition_ids)
     if row:
-        return dict(row)
+        if inheritance:
+            row["inheritance"] = inheritance
+        return row
     entry = acmg_sf(gene)
     if entry:
-        return {"name": entry["condition"], "inheritance": entry["inheritance"], "url": None}
+        return {
+            "name": entry["condition"],
+            "inheritance": inheritance or entry["inheritance"],
+            "url": None,
+        }
     return {"name": (fallback_name or "").replace("_", " ").strip(),
-            "inheritance": None, "url": None}
+            "inheritance": inheritance, "url": None}
