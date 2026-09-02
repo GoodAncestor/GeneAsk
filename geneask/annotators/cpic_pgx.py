@@ -111,7 +111,7 @@ def recommendations_for_gene(genesymbol: str, phenotype: str | None = None,
                                (p["guidelineid"], p["drugid"])).fetchall()
             for r in recs:
                 phen = json.loads(r["phenotypes"] or "{}")
-                if phenotype and phenotype not in json.dumps(phen):
+                if phenotype and not _phenotype_matches(phen, genesymbol, phenotype):
                     continue
                 rec_txt = r["drugrecommendation"] or ""
                 tier = _LEVEL_TIER.get((p["cpiclevel"] or "").upper(), Tier.SPECULATIVE)
@@ -122,7 +122,74 @@ def recommendations_for_gene(genesymbol: str, phenotype: str | None = None,
                     detail={"gene": genesymbol, "drug": drug_name,
                             "cpic_level": p["cpiclevel"], "topic": "pharmacogenomic",
                             "modality": "genome", "phenotypes": phen,
-                            "classification": r["classification"]}))
+                            "classification": r["classification"],
+                            "recommendation": rec_txt}))
     finally:
         con.close()
     return out
+
+
+def _normal(value: object) -> str:
+    return " ".join(str(value or "").split()).casefold()
+
+
+def _phenotype_matches(payload: object, genesymbol: str, phenotype: str) -> bool:
+    """Match one gene's phenotype without selecting another gene's value."""
+    target_gene = _normal(genesymbol)
+    target_phenotype = _normal(phenotype)
+    if not target_gene or not target_phenotype:
+        return False
+
+    def values(value: object) -> list[str]:
+        if isinstance(value, str):
+            return [value]
+        if isinstance(value, list):
+            return [item for child in value for item in values(child)]
+        if isinstance(value, dict):
+            return [item for child in value.values() for item in values(child)]
+        return []
+
+    def visit(value: object) -> bool:
+        if isinstance(value, list):
+            return any(visit(item) for item in value)
+        if not isinstance(value, dict):
+            return False
+
+        for key, child in value.items():
+            if _normal(key) == target_gene:
+                return any(_normal(item) == target_phenotype for item in values(child))
+
+        named_gene = value.get("gene") or value.get("geneSymbol")
+        if _normal(named_gene) == target_gene:
+            named_phenotype = value.get("phenotype") or value.get("phenotypeName")
+            if any(_normal(item) == target_phenotype for item in values(named_phenotype)):
+                return True
+        return any(visit(child) for child in value.values())
+
+    return visit(payload)
+
+
+def recommendations_for_phenotype(
+    genesymbol: str,
+    phenotype: str,
+    *,
+    diplotype: str | None = None,
+    activity_score: float | None = None,
+    diplotype_source: str | None = None,
+    db_path: str | None = None,
+) -> list[Finding]:
+    """Return CPIC guidance selected by an explicitly called phenotype."""
+    if not str(phenotype or "").strip():
+        return []
+    findings = recommendations_for_gene(genesymbol, phenotype, db_path=db_path)
+    for finding in findings:
+        detail = finding.detail or {}
+        detail["phenotype"] = phenotype
+        if diplotype:
+            detail["diplotype"] = diplotype
+        if activity_score is not None:
+            detail["activity_score"] = activity_score
+        if diplotype_source:
+            detail["diplotype_source"] = diplotype_source
+        finding.detail = detail
+    return findings

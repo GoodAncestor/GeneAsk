@@ -227,13 +227,34 @@ def _chain_gwas(f: Finding, ip: Interpretation) -> list[ChainLink]:
 def interpret_cpic(f: Finding) -> Interpretation:
     d = f.detail or {}
     gene, drug = str(d.get("gene") or f.marker), str(d.get("drug") or "a medicine")
-    found = (f"You carry a change in {gene}. CPIC publishes prescribing guidance for {drug} "
-             f"by {gene} status.")
-    can = (f"For some {gene} types, {drug} works differently or needs a different dose. "
-           f"The guidance depends on the type, which this report did not determine.")
-    how = (f"CPIC evidence level {d.get('cpic_level') or '?'}. This report did not determine "
-           f"your {gene} type (diplotype), so the specific recommendation cannot be selected here.")
-    nxt = f"Tell a prescriber or pharmacist that you carry a {gene} change before starting {drug}."
+    diplotype = str(d.get("diplotype") or "").strip()
+    phenotype = str(d.get("phenotype") or "").strip()
+    source = str(d.get("diplotype_source") or "").strip()
+    level = str(d.get("cpic_level") or "?")
+    if diplotype and phenotype:
+        if source.startswith("PharmCAT"):
+            found = f"Your {gene} type is {diplotype} ({phenotype}), called by PharmCAT."
+        else:
+            found = f"The reported {gene} type is {diplotype} ({phenotype})."
+        can = f"CPIC links this phenotype to guidance for {drug}."
+        how_parts = []
+        if source:
+            how_parts.append(f"{source} calls the diplotype.")
+        how_parts.append(f"CPIC rates this gene-drug guidance at level {level}.")
+        if d.get("activity_score") is not None:
+            how_parts.append(f"PharmCAT reports an activity score of {d['activity_score']:g}.")
+        how = " ".join(how_parts)
+        classification = str(d.get("classification") or "").strip()
+        strength = f"{classification} recommendation" if classification else "recommendation"
+        nxt = f"Ask a prescriber or pharmacist about CPIC's {strength} for {drug}."
+    else:
+        found = (f"You carry a change in {gene}. CPIC publishes prescribing guidance for {drug} "
+                 f"by {gene} status.")
+        can = (f"For some {gene} types, {drug} works differently or needs a different dose. "
+               f"The guidance depends on the type, which this report did not determine.")
+        how = (f"CPIC evidence level {level}. This report did not determine "
+               f"your {gene} type (diplotype), so the specific recommendation cannot be selected here.")
+        nxt = f"Tell a prescriber or pharmacist that you carry a {gene} change before starting {drug}."
     return Interpretation(found=found, can_mean=can, how_sure=how, next_step=nxt,
                           condition=None, condition_ids=[], zygosity=None,
                           citations=[ChainLink(kind="assertion", label=f"CPIC {gene}–{drug}",

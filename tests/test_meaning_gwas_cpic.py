@@ -47,3 +47,35 @@ def test_cpic_names_the_drug_and_the_missing_diplotype():
     assert "did not determine" in ip.how_sure.lower()
     assert "pharmacist" in ip.next_step.lower()
     assert f.evidence_chain[0].kind == "gene"
+
+
+def test_cpic_names_the_called_diplotype_and_specific_recommendation():
+    f = Finding(
+        marker="CYP2C19",
+        source="cpic",
+        description="x",
+        tier=Tier.ROBUST,
+        categories=[Category.CLINICAL],
+        detail={
+            "gene": "CYP2C19",
+            "drug": "clopidogrel",
+            "cpic_level": "A",
+            "classification": "Strong",
+            "recommendation": "Consider another antiplatelet",
+            "diplotype": "*1/*2",
+            "phenotype": "Intermediate Metabolizer",
+            "activity_score": 1.0,
+            "diplotype_source": "PharmCAT 3.4.0",
+        },
+    )
+
+    interpret([f])
+    interpretation = f.interpretation
+
+    assert interpretation.found == (
+        "Your CYP2C19 type is *1/*2 (Intermediate Metabolizer), called by PharmCAT."
+    )
+    assert "PharmCAT 3.4.0" in interpretation.how_sure
+    assert "CPIC" in interpretation.how_sure and "level A" in interpretation.how_sure
+    assert "Strong recommendation" in interpretation.next_step
+    assert "clopidogrel" in interpretation.next_step
