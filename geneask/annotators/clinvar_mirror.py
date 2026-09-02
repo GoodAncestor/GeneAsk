@@ -101,8 +101,17 @@ def _condition_ids(clndisdb: str, clndn: str = "") -> list[str]:
         for ref in group.split(","):
             ref = ref.strip()
             if ref and ref != "." and ":" in ref:
-                out.append(ref)
+                out.append(_norm_id(ref))
     return out
+
+
+def _norm_id(ref: str) -> str:
+    """ClinVar writes MONDO ids as 'MONDO:MONDO:0012933' (the db name, then the
+    curie). Collapse a repeated prefix so lookups by 'MONDO:0012933' match."""
+    parts = ref.split(":")
+    if len(parts) >= 3 and parts[0] == parts[1]:
+        return ":".join(parts[1:])
+    return ref
 
 
 def _consequence(mc: str) -> str | None:
@@ -192,7 +201,7 @@ def _as_index(rows) -> dict:
         "review_status": r["review_status"], "gold_stars": r["gold_stars"],
         "clinvar_variation_id": r["clinvar_variation_id"],
         "conditions": json.loads(r["conditions"] or "[]"),
-        "condition_ids": json.loads(r["condition_ids"] or "[]"),
+        "condition_ids": [_norm_id(x) for x in json.loads(r["condition_ids"] or "[]")],
         "molecular_consequence": r["molecular_consequence"],
         "origin": json.loads(r["origin"] or "[]"),
         "allele_id": r["allele_id"]} for r in rows}

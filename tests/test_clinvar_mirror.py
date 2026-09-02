@@ -81,3 +81,11 @@ def test_screen_prefers_mirror(tmp_path, monkeypatch):
     from geneask.interpret.clinvar_screen import index_by_variant_id
     idx = index_by_variant_id({})     # empty bundled panel; mirror should win
     assert "1-930200-G-A" in idx and idx["1-930200-G-A"]["gene"] == "SAMD11"
+
+
+def test_repeated_mondo_prefix_is_collapsed():
+    from geneask.annotators.clinvar_mirror import _condition_ids, _norm_id
+    assert _norm_id("MONDO:MONDO:0012933") == "MONDO:0012933"
+    assert _norm_id("MedGen:C0677776") == "MedGen:C0677776"
+    assert _condition_ids("MONDO:MONDO:0012933,MedGen:C2675520|MedGen:CN517202",
+                          "Breast-ovarian_cancer|not_provided") == ["MONDO:0012933", "MedGen:C2675520"]
