@@ -130,15 +130,32 @@ def _integer(value: str | None) -> int | None:
 
 
 def _download(chrom: str, dest: Path) -> None:
+    """Fetch one chromosome's sites VCF to `dest`, or leave an existing one.
+
+    Writes to `dest.part` and renames only when the byte count matches the
+    server's Content-Length. Without that check a dropped connection left a
+    file that looked complete and later ended before the gzip end marker
+    (chr1, 2026-09-02, 44,078,103,205 bytes): the ingester read it to the cut
+    and raised, hours in.
+    """
     if dest.exists() and dest.stat().st_size > 0:
         return       # a prior run already pulled this chromosome's file
+    part = dest.with_name(dest.name + ".part")
     req = urllib.request.Request(_URL_TMPL.format(chrom=chrom), headers={"User-Agent": "curl/8"})
-    with urllib.request.urlopen(req, timeout=1800) as r, open(dest, "wb") as out:
+    with urllib.request.urlopen(req, timeout=1800) as r, open(part, "wb") as out:
+        expected = r.headers.get("Content-Length")
+        written = 0
         while True:
             chunk = r.read(1 << 20)
             if not chunk:
                 break
             out.write(chunk)
+            written += len(chunk)
+    if expected is not None and written != int(expected):
+        part.unlink(missing_ok=True)
+        raise IOError(f"gnomAD chr{chrom}: received {written:,} of {int(expected):,} bytes; "
+                      f"download incomplete, file discarded")
+    part.replace(dest)
 
 
 def _ingest_chrom(con: sqlite3.Connection, vcf_path: Path, remaining: int | None) -> int:

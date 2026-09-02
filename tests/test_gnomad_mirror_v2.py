@@ -59,3 +59,23 @@ def test_unrecognised_database_is_refused(tmp_path):
     con.close()
     assert lookup_many(["x"], db_path=db) == {}
     assert mirror_status(db).health.value == "unavailable"
+
+
+def test_download_discards_a_short_transfer(tmp_path, monkeypatch):
+    import io
+    from geneask.annotators import gnomad_mirror as gm
+
+    class Resp(io.BytesIO):
+        headers = {"Content-Length": "10"}
+        def __enter__(self): return self
+        def __exit__(self, *a): return False
+
+    monkeypatch.setattr(gm.urllib.request, "urlopen", lambda req, timeout: Resp(b"12345"))
+    dest = tmp_path / "chr1.vcf.bgz"
+    import pytest
+    with pytest.raises(IOError, match="5 of 10"):
+        gm._download("1", dest)
+    assert not dest.exists() and not (tmp_path / "chr1.vcf.bgz.part").exists()
+    monkeypatch.setattr(gm.urllib.request, "urlopen", lambda req, timeout: Resp(b"1234567890"))
+    gm._download("1", dest)
+    assert dest.read_bytes() == b"1234567890"
