@@ -28,7 +28,7 @@ ADULT_URL = "https://actionability.clinicalgenome.org/ac/Adult/api/summ?format=t
 PEDIATRIC_URL = (
     "https://actionability.clinicalgenome.org/ac/Pediatric/api/summ?format=tsv"
 )
-SCHEMA_VERSION = "1"
+SCHEMA_VERSION = "2"
 _DEFAULT_DB = "/data/clingen/clingen_mirror.db"
 _DB_ENV = "CLINGEN_MIRROR_DB"
 
@@ -36,19 +36,19 @@ _VALIDITY_FILE = "clingen_gene_validity.csv"
 _ADULT_FILE = "clingen_actionability_adult.tsv"
 _PEDIATRIC_FILE = "clingen_actionability_pediatric.tsv"
 
-# Field names verified against the live files on 2026-09-02. Validity CSV header
-# (after a four-row preamble): GENE SYMBOL, GENE ID (HGNC), DISEASE LABEL,
+# Validity field names were verified against the live file on 2026-09-02.
+# Its header follows a preamble: GENE SYMBOL, GENE ID (HGNC), DISEASE LABEL,
 # DISEASE ID (MONDO), MOI, SOP, CLASSIFICATION, ONLINE REPORT, CLASSIFICATION
-# DATE, GCEP. Actionability TSV header (first row, "# docId ..."): ... context,
-# contextIri, ..., geneOrVariant, geneOmim, disease, omim, status-overall, ...,
-# outcome, ..., overall. `overall` reads like "10CB": the total score, then two
-# evidence-level letters. Header detection makes a changed live shape fail
-# clearly instead of skipping a fixed number of preamble lines.
+# DATE, GCEP. The live actionability UI showed Outcome and Intervention columns
+# on 2026-09-02. The raw TSV host was unreachable, so its planned first-row
+# "# docId" shape remains unverified. Header detection avoids a row-count guess.
 _GENE_FIELDS = ("GENE SYMBOL", "geneOrVariant", "GENE", "GENE(S)")
 _DISEASE_FIELDS = ("DISEASE LABEL", "disease", "CONDITION")
 _SCORE_FIELDS = ("overall", "SCORE", "ACTIONABILITY SCORE", "TOTAL SCORE")
 _REPORT_FIELDS = ("ONLINE REPORT", "contextIri", "REPORT URL", "REPORT")
 _STATUS_FIELDS = ("status-overall", "STATUS")
+_INTERVENTION_FIELDS = ("intervention", "INTERVENTION")
+_OUTCOME_FIELDS = ("outcome", "OUTCOME")
 
 _CLASSIFICATION_RANK = {
     "definitive": 7,
@@ -126,7 +126,7 @@ def _genes(value: str) -> list[str]:
 
 
 def build_mirror(db_path: str | None = None, workdir: str | None = None) -> dict:
-    """Download ClinGen snapshots and build the schema-v1 SQLite mirror."""
+    """Download ClinGen snapshots and build the schema-v2 SQLite mirror."""
     database = _db_path(db_path)
     Path(database).parent.mkdir(parents=True, exist_ok=True)
     source_dir = Path(workdir or Path(database).parent)
@@ -166,7 +166,13 @@ def build_mirror(db_path: str | None = None, workdir: str | None = None) -> dict
         for row in _rows(
             path,
             "\t",
-            ((_GENE_FIELDS), (_DISEASE_FIELDS), (_SCORE_FIELDS)),
+            (
+                (_GENE_FIELDS),
+                (_DISEASE_FIELDS),
+                (_SCORE_FIELDS),
+                (_INTERVENTION_FIELDS),
+                (_OUTCOME_FIELDS),
+            ),
         ):
             if _value(row, *_STATUS_FIELDS).strip().lower() == "retracted":
                 continue
@@ -180,6 +186,8 @@ def build_mirror(db_path: str | None = None, workdir: str | None = None) -> dict
                         context,
                         score,
                         _value(row, *_REPORT_FIELDS),
+                        _value(row, *_INTERVENTION_FIELDS),
+                        _value(row, *_OUTCOME_FIELDS),
                     )
                 )
 
@@ -202,6 +210,7 @@ def build_mirror(db_path: str | None = None, workdir: str | None = None) -> dict
         connection.execute(
             """CREATE TABLE actionability(
                 gene TEXT, disease TEXT, context TEXT, score REAL, report_url TEXT,
+                intervention TEXT, outcome TEXT,
                 UNIQUE(gene, disease, context))"""
         )
         connection.executemany(
@@ -210,9 +219,17 @@ def build_mirror(db_path: str | None = None, workdir: str | None = None) -> dict
         connection.executemany(
             # One curation has several outcome rows; keep the highest score per
             # (gene, disease, context) rather than whichever row came last.
-            "INSERT INTO actionability VALUES (?,?,?,?,?) ON CONFLICT(gene, disease, context) "
-            "DO UPDATE SET score = MAX(COALESCE(score, -1), COALESCE(excluded.score, -1)), "
-            "report_url = COALESCE(excluded.report_url, report_url)",
+            "INSERT INTO actionability VALUES (?,?,?,?,?,?,?) "
+            "ON CONFLICT(gene, disease, context) DO UPDATE SET "
+            "intervention = CASE WHEN COALESCE(excluded.score, -1) > "
+            "COALESCE(actionability.score, -1) THEN excluded.intervention "
+            "ELSE actionability.intervention END, "
+            "outcome = CASE WHEN COALESCE(excluded.score, -1) > "
+            "COALESCE(actionability.score, -1) THEN excluded.outcome "
+            "ELSE actionability.outcome END, "
+            "score = MAX(COALESCE(actionability.score, -1), "
+            "COALESCE(excluded.score, -1)), "
+            "report_url = COALESCE(excluded.report_url, actionability.report_url)",
             actionability_rows,
         )
         connection.execute("CREATE INDEX validity_gene ON validity(gene)")

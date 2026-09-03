@@ -72,6 +72,8 @@ def test_lookup_and_adult_actionability_keep_source_fields(tmp_path):
     assert actionability["score"] == 12
     assert actionability["context"] == "adult"
     assert actionability["report_url"].endswith("/brca2")
+    assert actionability["intervention"] == "Surveillance"
+    assert actionability["outcome"] == "Breast cancer"
 
 
 def test_highest_classified_gene_row_is_the_fallback(tmp_path):
@@ -94,6 +96,18 @@ def test_old_schema_is_refused_with_a_rebuild_note(tmp_path):
     status = clingen.mirror_status(str(database))
     assert status.health == Health.UNAVAILABLE
     assert "rebuild" in status.note.lower()
+
+
+def test_schema_one_is_refused_with_the_schema_two_rebuild_note(tmp_path):
+    database = tmp_path / "old-v1.db"
+    with sqlite3.connect(database) as connection:
+        connection.execute("CREATE TABLE meta(key TEXT PRIMARY KEY, value TEXT)")
+        connection.execute("INSERT INTO meta VALUES ('schema_version', '1')")
+
+    assert clingen.lookup("BRCA2", db_path=str(database)) == {}
+    status = clingen.mirror_status(str(database))
+    assert status.health == Health.UNAVAILABLE
+    assert "schema v2 requires a rebuild" in status.note
 
 
 def test_actionability_keeps_the_highest_score_and_drops_retracted(tmp_path):
