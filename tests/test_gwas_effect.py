@@ -35,6 +35,7 @@ def test_mirror_keeps_effect_and_finding_carries_it(tmp_path):
     assert detail["accession"] == "GCST000001"
     assert detail["initial_n"] == "10,000 European"
     assert detail["mapped_gene"] == "TCF7L2"
+    assert detail["chrom"] == "10" and detail["pos"] == 114758349
     assert detail["risk_allele_carried"] is True
     finding2, = findings_for("rs7903146", carried_alleles={"C"}, db_path=db)
     assert finding2.detail["risk_allele_carried"] is False

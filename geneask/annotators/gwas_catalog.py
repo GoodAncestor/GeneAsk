@@ -255,6 +255,7 @@ def findings_from_rows(rsid: str, rows, carried_alleles: set | None = None) -> l
             marker=rsid, source="gwas_catalog", description=desc,
             tier=_tier(row.get("pvalue")), categories=[Category.TRAIT],
             detail={"p": row.get("pvalue"), "trait": trait, "efo": efo,
+                    "chrom": row.get("chrom"), "pos": row.get("pos"),
                     "risk_allele": ra, "raf": row.get("raf"),
                     "risk_allele_carried": carries,
                     "effect_type": row.get("effect_type"),

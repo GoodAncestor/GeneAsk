@@ -360,6 +360,36 @@ def lookup_many(variant_ids, db_path: str | None = None) -> dict:
         con.close()
 
 
+def lookup_by_position(chrom, pos, db_path: str | None = None) -> dict[str, float]:
+    """Return every non-negative allele frequency at one chromosome position."""
+    db = _db_path(db_path)
+    if not Path(db).exists():
+        return {}
+    normalized_chrom = str(chrom or "")
+    if normalized_chrom.lower().startswith("chr"):
+        normalized_chrom = normalized_chrom[3:]
+    try:
+        normalized_pos = int(pos)
+    except (TypeError, ValueError):
+        return {}
+    prefix = f"{normalized_chrom}-{normalized_pos}-%"
+    con = sqlite3.connect(db)
+    try:
+        if _schema_version(con) is None:
+            return {}
+        return {
+            str(variant_id): float(af)
+            for variant_id, af in con.execute(
+                "SELECT variant_id, af FROM af WHERE variant_id LIKE ?", (prefix,)
+            )
+            if af is not None and float(af) >= 0
+        }
+    except sqlite3.OperationalError:
+        return {}
+    finally:
+        con.close()
+
+
 def mirror_status(db_path: str | None = None) -> ProviderStatus:
     """Return the health of the gnomAD mirror stored on disk."""
     db = _db_path(db_path)
