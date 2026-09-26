@@ -220,6 +220,9 @@ def query_variant(variant_id: str, *, requested_scorers=None, offline=False,
                   "missing_scorers": missing, "status": "partial" if missing else "complete",
                   "local_avi": True, "local_source_url": local.get("source_url"),
                   "provenance": "alphagenome_atlas_api_and_local_avi"}
+    if local_success and local.get("avi_phred") is not None:
+        # Only the downloaded file carries PHRED; keep it alongside API tracks.
+        result["avi_phred"] = local["avi_phred"]
     result["remote_attempted"] = True
     if not result.get("local_avi"):
         _cache_write(path, key, result)

@@ -159,7 +159,7 @@ def test_partial_api_results_preserved_but_not_cached(monkeypatch, tmp_path):
 
 def test_remote_features_merge_local_avi(monkeypatch, tmp_path):
     _enable(monkeypatch, tmp_path)
-    monkeypatch.setattr(atlas, "lookup_local_avi", lambda vid: {**_success(vid), "provenance": "alphagenome_atlas_local_avi"})
+    monkeypatch.setattr(atlas, "lookup_local_avi", lambda vid: {**_success(vid), "provenance": "alphagenome_atlas_local_avi", "avi_phred": 21.5})
     monkeypatch.setattr(atlas, "_run_remote", lambda vid, *args: {
         **atlas._base(vid), "status": "partial", "missing_scorers": ["AVI_SCORE"],
         "tracks": [{"scorer": "AVI_SCORE_FEATURE_IMPORTANCE", "raw_score": .5, "feature_name": "test feature"}], "n_tracks": 1})
@@ -167,6 +167,7 @@ def test_remote_features_merge_local_avi(monkeypatch, tmp_path):
     assert result["status"] == "complete" and result["avi_score"] == .75
     assert not result["missing_scorers"] and result["local_avi"]
     assert len(result["tracks"]) == 2
+    assert result["avi_phred"] == 21.5
 
 
 def test_remote_priority_prefers_requested_and_novel_to_resolved(monkeypatch, tmp_path):
