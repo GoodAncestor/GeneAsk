@@ -8,7 +8,7 @@ license-files = ["LICENSE", "NOTICE"]
 dependencies = [
     # GoodAncestor/bio-core — shared mechanism (private repo). git-source so a clean
     # install resolves from GitHub; private-repo access uses git credentials (see README).
-    "biocore @ git+https://github.com/GoodAncestor/bio-core.git@e7d9a2b535785d2d77555ee5175e4e6cee65505a",
+    "biocore @ git+https://github.com/GoodAncestor/bio-core.git@4f0d8e130c2f0f89df0f2f532458cd37617cb6fe",
     # GRCh37->38 liftover for build-37 consumer arrays (panel is GRCh38); uses the
     # bundled UCSC chain. Without it, build-37 uploads silently match no ClinVar sites.
     "pyliftover",
@@ -16,7 +16,7 @@ dependencies = [
 
 [project.optional-dependencies]
 ingest = ["pysam"]   # 23andMe/CG -> VCF anchoring
-alphagenome = ["alphagenome"]   # regulatory VEP enrichment (opt-in, key-gated); heavy dep, imported lazily
+alphagenome = ["alphagenome>=0.9.0"]   # regulatory VEP enrichment (opt-in, key-gated); heavy dep, imported lazily
 
 [build-system]
 requires = ["setuptools>=61"]

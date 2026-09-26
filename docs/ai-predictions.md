@@ -27,35 +27,68 @@ full scan. Pass `status={}` to `annotate_findings` to collect unique eligible,
 scored, not_found, and skipped counts. A missing mirror and a lookup miss are
 distinct. A lookup miss does not establish whether a variant is missense.
 
-## AlphaGenome Atlas evaluation (2026-09-25)
+## AlphaGenome Atlas integration (2026-09-26)
 
-Official SDK API is now available:
-`alphagenome.atlas.atlas.create(key, timeout=30).query_variant(variant,
-requested_scorers=[...])`, returning scorer-name -> AnnData with raw scores,
-optional quantile layers and gene/track metadata. `scorer_metadata()` discovers
-names and signedness. The optional `alphagenome_atlas.query_variant` adapter uses
-this API directly, accepts single-nucleotide GRCh38 substitutions only, and
-returns explicit configuration/failure/coverage status. No private endpoint or
-invented scorer name is used.
+`alphagenome_atlas.query_variant(variant_id, *, requested_scorers=None,
+offline=False, cache_db=None, timeout_s=None)` returns a structured status,
+tracks, optional `avi_score`, provenance, and cache information. Default explicit
+scorers are `AVI_SCORE` and `AVI_SCORE_FEATURE_IMPORTANCE`. Track summaries retain
+up to five strongest entries per scorer; raw values are never ranked across
+unrelated scorers. Missing requested scorers are explicit. AVI scores describe
+research variant impact, not personal disease probability.
 
-Enable only after installing an SDK version that includes `alphagenome.atlas`,
-confirming access terms for the application and validating the desired scorer
-names from `scorer_metadata()`. Set `ALPHAGENOME_ATLAS_ENABLED=1`, server-side
-`ALPHA_GENOME_KEY`, and `ALPHAGENOME_ATLAS_SCORERS` (comma-separated explicit
-names, maximum 20). Call only in an authorized analysis request, not on report
-GET. Keep AVI raw scores labeled with their scorer; do not pool them with
-molecular effect scores or interpret them as personal disease probability.
-This adapter does not silently enable Atlas, replace existing inference, or
-claim a production call has succeeded. Add a separately versioned persistent
-Atlas cache before using bulk queries; current adapter is for single-variant
-evaluation only.
+`annotate_findings(findings, *, offline=False, status=None, max_variants=None,
+cache_db=None)` enriches all valid SNV markers from standard human chromosomes
+without changing clinical tiers. The caller must establish GRCh38 coordinates;
+this module cannot infer genome assembly from a bare variant string. It returns
+enriched finding count, and writes unique-variant coverage to `status`:
+`eligible/scored/failed/skipped/cache_hits/local_hits/not_found/partial`, plus
+`remote_attempted`, reasons, and local installation status.
+
+API inference is opt-in (`ALPHAGENOME_ATLAS_ENABLED=1`, `ALPHA_GENOME_KEY`). Each
+SDK query runs in a subprocess terminated and reaped at its hard timeout
+(`ALPHAGENOME_ATLAS_TIMEOUT_S`, default 20 seconds). Report remote calls share a
+25-second budget (`ALPHAGENOME_ATLAS_TIME_BUDGET_S`) and maximum 10 remote attempts
+(`ALPHAGENOME_ATLAS_MAX_VARIANTS`, maximum 50). Local/cache annotations do not
+consume the remote-attempt cap. Remote priority is explicit research requests,
+then novel/uncertain/conflicting candidates, then other variants; within each
+group higher available local AVI scores come first, with variant-ID tie breaking. Callers with an enclosing subprocess must kill
+the whole process group on their own timeout so nested children cannot survive.
+
+Complete API summaries are persisted in `ALPHAGENOME_ATLAS_CACHE_DB` (default
+`~/.cache/geneask/alphagenome_atlas.db`). Keys include summary schema version,
+`ALPHAGENOME_ATLAS_DATA_VERSION` (default 2026-09), normalized variant, and scorer
+set. Cache TTL defaults to 30 days (`ALPHAGENOME_ATLAS_CACHE_TTL_S`). Failures, partial scorer coverage and
+missing results are never cached. `offline=True` uses only cache/local scores,
+without importing the SDK or contacting an API. Disabled API configuration still
+permits existing cache and local records to be read.
+
+### Local indexed AVI scores
+
+Set `ALPHAGENOME_ATLAS_AVI_FILE` to an installed local BGZF/Tabix file or directory
+of chromosome shards. `atlas_avi.local_status()` reports missing/invalid indexes
+or unsupported schemas. `atlas_avi.lookup_many(variant_ids, path=None,
+status=None)` groups indexed seeks into 64kb windows using one open handle per
+shard. It returns exact allele matches with `avi_score` and optional `avi_phred`.
+A miss is not a benign prediction. Local AVI covers only AVI_SCORE; when requested,
+feature importance still requires API/cache coverage. Local scores survive remote
+failure, with `missing_scorers` and `remote_status` exposed.
+
+The official 88.5GB archive is described as AVI and Phred-scaled scores in Tabix
+format. Its actual column layout has not yet been verified locally because the
+download endpoint returned HTTP 500. The adapter intentionally requires named
+chromosome, 1-based position, REF, ALT and AVI score columns. It accepts header
+aliases or an explicit `ALPHAGENOME_ATLAS_AVI_COLUMNS` comma-separated list supplied
+after inspecting the downloaded file. It never guesses column offsets or
+silently treats BED starts as 1-based positions. Tests exercise real synthetic
+BGZF+TBI files, not an installed full official mirror. Do not report full local
+coverage until installation and reference-variant validation succeed.
 
 Sources:
-- https://www.alphagenomedocs.com/variant_scoring.html
 - https://www.alphagenomedocs.com/api/atlas.html
 - https://www.alphagenomedocs.com/api/generated/alphagenome.atlas.atlas.AtlasClient.html
 - https://github.com/google-deepmind/alphagenome/blob/main/src/alphagenome/atlas/atlas.py
-- https://deepmind.google/science/alphagenome/
+- https://deepmind.google.com/science/alphagenome/_/download/atlas/avi_scores_snvs_tabix.zip
 
 ## Request timeout limitation
 
@@ -68,3 +101,8 @@ Do not describe this as a hard end-to-end request timeout. A true RPC deadline
 requires SDK support or a separately reviewed gRPC channel integration.
 
 Source: https://github.com/google-deepmind/alphagenome/blob/v0.8.0/src/alphagenome/models/dna_client.py
+
+The Atlas `data_version` is a configured cache release label, not a claim that
+the API returned a specific server model version. The verified live feature
+importance response uses `var.name` for feature labels and has no quantile layer;
+raw feature attributions are preserved with their original feature names.
