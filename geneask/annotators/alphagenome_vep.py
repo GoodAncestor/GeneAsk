@@ -11,8 +11,8 @@ its cancer relevance sits (regulatory variants near oncogenes, e.g. TAL1).
 Design (deliberately constrained — the key is a rate-limited non-commercial key
 on a possibly-public site):
   - key read SERVER-SIDE only from ALPHA_GENOME_KEY; never sent to a client,
-    never bundled. No key -> every function is a no-op. This is also the license
-    boundary: the non-commercial constraint travels with the KEY, not this code.
+    never bundled. No key -> inference is a no-op. Commercial output mode also
+    excludes inference and cached predictions through the shared output policy.
   - opt-in: does nothing unless ALPHAGENOME_ENABLED is truthy AND a key is set.
   - paced, with a time budget rather than a variant cap. AlphaGenome publishes no
     quota at all, on purpose — their team's own answer is that limits are
@@ -34,6 +34,7 @@ from __future__ import annotations
 import os, json, sqlite3, math
 from datetime import datetime, timezone
 from pathlib import Path
+from biocore.licensing import commercial_mode, prediction_license
 
 _KEY_ENV = "ALPHA_GENOME_KEY"
 _ENABLED_ENV = "ALPHAGENOME_ENABLED"
@@ -50,7 +51,7 @@ _SEQ_LEN = 131072
 
 
 def _enabled() -> bool:
-    return bool(os.environ.get(_KEY_ENV)) and \
+    return not commercial_mode() and bool(os.environ.get(_KEY_ENV)) and \
         os.environ.get(_ENABLED_ENV, "").lower() in ("1", "true", "yes", "on")
 
 
@@ -141,9 +142,13 @@ class Pacing:
 
     def as_dict(self) -> dict:
         """Report-level coverage; absent results never imply benign effects."""
-        return {key: getattr(self, key) for key in (
+        result = {key: getattr(self, key) for key in (
             "status", "eligible", "scored", "failed", "skipped", "cache_hits",
             "no_result", "spent", "halted", "client_missing")}
+        if self.status == "license_blocked":
+            result.update(reason="Non-commercial data withheld by commercial output policy.",
+                          license=prediction_license("alphagenome"))
+        return result
 
     def acquire(self) -> bool:
         if self.halted:
@@ -178,6 +183,11 @@ def score_variant(variant_id: str, api_key: str, cache_db: str | None = None,
                   pacing: "Pacing | None" = None) -> dict | None:
     """Score one variant's regulatory effect. Returns a small summary dict
     {variant_id, top_modality, max_abs_score, n_tracks} or None. Cached on disk."""
+    if commercial_mode():
+        if pacing is not None:
+            pacing.status = "license_blocked"
+            pacing.skipped += 1
+        return None
     parsed = _parse_vid(variant_id)
     if parsed is None:
         return None
@@ -192,6 +202,8 @@ def score_variant(variant_id: str, api_key: str, cache_db: str | None = None,
             if result and result.get("schema_version") != 2:
                 # Old summaries inferred a biological direction from every quantile.
                 result = {**result, "direction": "unknown", "provenance": "legacy_cache"}
+            if result:
+                result.setdefault("license", prediction_license("alphagenome"))
             if not result and pacing is not None:
                 pacing.no_result += 1
             return result
@@ -278,7 +290,7 @@ def summarize_scores(df, variant_id: str) -> dict | None:
             "top_modality": top.get("output_type", top.get("variant_scorer", "regulatory")),
             "n_tracks": len(tracks), "top_tracks": tracks[:5], "schema_version": 2,
             "assembly": "GRCh38", "sequence_length": _SEQ_LEN,
-            "provenance": "alphagenome_api", "scored_at": datetime.now(timezone.utc).isoformat(),
+            "provenance": "alphagenome_api", "license": prediction_license("alphagenome"), "scored_at": datetime.now(timezone.utc).isoformat(),
             "score_explanation": "Background rank of predicted molecular effect; not a disease probability."}
 
 
@@ -305,6 +317,10 @@ def annotate_findings(findings, cache_db: str | None = None,
         if _parse_vid(f.marker or "") is not None and _is_uncertain(f):
             groups.setdefault(f.marker, []).append(f)
     pacing.eligible = len(groups)
+    if commercial_mode():
+        pacing.status = "license_blocked"
+        pacing.skipped = pacing.eligible
+        return 0
     if not _enabled():
         pacing.status = ("missing_key" if os.environ.get(_ENABLED_ENV, "").lower()
                          in ("1", "true", "yes", "on") else "disabled")

@@ -12,6 +12,7 @@ import math
 import os
 from pathlib import Path
 import re
+from biocore.licensing import prediction_license
 
 SOURCE_URL = "https://deepmind.google.com/science/alphagenome/_/download/atlas/avi_scores_snvs_tabix.zip"
 ALIASES = {
@@ -19,7 +20,7 @@ ALIASES = {
     "pos": {"pos", "position", "position1", "position1based"},
     "ref": {"ref", "reference", "referenceallele", "referencebases"},
     "alt": {"alt", "alternate", "alternative", "alternateallele", "alternatebases"},
-    "avi": {"avi", "aviscore", "score"},
+    "avi": {"avi", "aviscore", "score", "rawscore"},
     "phred": {"phred", "phredscore", "aviphred", "aviscorephred", "phredscaledscore"},
 }
 
@@ -118,6 +119,7 @@ def lookup_many(variant_ids, path=None, *, status=None):
                         value = {"model": "AlphaGenome Atlas", "variant_id": vid, "assembly": "GRCh38",
                                  "status": "complete", "avi_score": score, "cache_hit": False,
                                  "provenance": "alphagenome_atlas_local_avi", "source_url": SOURCE_URL,
+                                 "license": prediction_license("alphagenome_atlas_local_avi"),
                                  "data_version": os.getenv("ALPHAGENOME_ATLAS_DATA_VERSION", "2026-09"),
                                  "tracks": [{"scorer": "AVI_SCORE", "raw_score": score, "direction": "unknown"}],
                                  "n_tracks": 1, "score_explanation": "Research variant-impact score, not a personal disease probability."}

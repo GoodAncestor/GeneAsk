@@ -41,3 +41,8 @@ def test_offline_query_uses_local_without_network(tmp_path, monkeypatch):
     assert result["avi_score"] == .75
     assert result["missing_scorers"] == ["AVI_SCORE_FEATURE_IMPORTANCE"]
     assert result["remote_status"] == "offline"
+
+
+def test_official_raw_score_header_alias(tmp_path):
+    path = _fixture(tmp_path, "#chrom\tpos\tref\talt\traw_score\tphred")
+    assert atlas_avi.lookup("1-100-A-G", path)["avi_score"] == .75

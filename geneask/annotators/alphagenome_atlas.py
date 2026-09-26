@@ -10,6 +10,7 @@ import subprocess
 import sys
 import time
 from datetime import datetime, timezone
+from biocore.licensing import commercial_mode, prediction_license
 from .alphagenome_vep import _parse_vid, _is_resource_exhausted
 
 DEFAULT_SCORERS = ("AVI_SCORE", "AVI_SCORE_FEATURE_IMPORTANCE")
@@ -59,7 +60,8 @@ def _cache_read(path, key):
         if row and time.time() - row[1] <= ttl:
             result = json.loads(row[0])
             if result.get("status") == "complete":
-                return {**result, "cache_hit": True, "remote_attempted": False}
+                return {**result, "cache_hit": True, "remote_attempted": False,
+                        "license": prediction_license("alphagenome_atlas_api")}
     except (sqlite3.Error, ValueError, OSError):
         pass
     return None
@@ -123,7 +125,7 @@ def _summarize(scores, variant_id, scorers):
     result = {**_base(variant_id), "status": ("partial" if missing else "complete") if total else "not_found",
               "tracks": bounded, "n_tracks": total, "requested_scorers": scorers,
               "missing_scorers": missing,
-              "provenance": "alphagenome_atlas_api", "data_version": os.getenv("ALPHAGENOME_ATLAS_DATA_VERSION", "2026-09"),
+              "provenance": "alphagenome_atlas_api", "license": prediction_license("alphagenome_atlas_api"), "data_version": os.getenv("ALPHAGENOME_ATLAS_DATA_VERSION", "2026-09"),
               "queried_at": datetime.now(timezone.utc).isoformat(),
               "score_explanation": "Research variant-impact score, not a personal disease probability."}
     if avi is not None:
@@ -134,6 +136,8 @@ def _summarize(scores, variant_id, scorers):
 def _remote_query(variant_id, scorers):
     """Child-only SDK execution. Parent terminates the process at its deadline."""
     result = _base(variant_id)
+    if commercial_mode():
+        return {**result, "status": "license_blocked", "license": prediction_license("alphagenome_atlas_api")}
     try:
         from alphagenome.atlas import atlas
         from alphagenome.data import genome
@@ -178,7 +182,7 @@ def query_variant(variant_id: str, *, requested_scorers=None, offline=False,
         return {**_base(variant_id), "status": "scorers_required"}
     scorers = sorted(set(scorers))
     path, key = _cache_path(cache_db), _cache_key(variant_id, scorers)
-    cached = _cache_read(path, key)
+    cached = None if commercial_mode() else _cache_read(path, key)
     if cached:
         return cached
     local = lookup_local_avi(variant_id) if _local_result is None else _local_result
@@ -191,6 +195,13 @@ def query_variant(variant_id: str, *, requested_scorers=None, offline=False,
     def unavailable(state):
         return ({**local, "remote_status": state} if local_success else
                 {**_base(variant_id), "status": state, "local_status": local["status"]})
+    if commercial_mode():
+        result = unavailable("license_blocked")
+        result["output_mode"] = "commercial"
+        result["reason"] = "Public API and cached API data withheld by commercial output policy; downloaded AVI remains eligible."
+        if not local_success:
+            result["license"] = prediction_license("alphagenome_atlas_api")
+        return result
     if offline:
         return unavailable("offline")
     if os.getenv("ALPHAGENOME_ATLAS_ENABLED", "").lower() not in ("1", "true", "yes", "on"):

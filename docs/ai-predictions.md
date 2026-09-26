@@ -106,3 +106,38 @@ The Atlas `data_version` is a configured cache release label, not a claim that
 the API returned a specific server model version. The verified live feature
 importance response uses `var.name` for feature labels and has no quantile layer;
 raw feature attributions are preserved with their original feature names.
+
+## Commercial and non-commercial output modes
+
+`DNAREPORT_OUTPUT_MODE=noncommercial` preserves the existing research behavior.
+`commercial` enables the shared `biocore.licensing` output policy. An unrecognized
+value applies commercial restrictions and reports a configuration note; it never
+silently enables non-commercial datasets. No earlier output-mode flag was found
+in the audited GeneAsk, bio-core or DNA-Report code.
+
+| Data route | Commercial output policy |
+| --- | --- |
+| Official downloaded AVI SNV / Phred scores | Allowed under the portal's permissive downloadable-artifact category |
+| Public AlphaGenome Atlas API, including API-returned AVI and cached API results | Withheld; the app only recognizes the downloaded AVI exception |
+| Downloaded AVI feature importance and merged splicing scores | Withheld; portal lists non-commercial use only |
+| AlphaGenome API and cached inference | Withheld under non-commercial access/output policy |
+| AlphaMissense mirror predictions | Withheld under CC BY-NC-SA 4.0 |
+
+This is the app's source-eligibility policy, not a general assurance about every
+possible commercial agreement with the provider. It does not enable separate
+Google Cloud commercial contracts. Changing score names or copying API values
+into a local cache does not change their provenance or eligibility.
+
+Commercial-mode engine checks happen before restricted API/cache/mirror access.
+Atlas uses the actual installed local AVI artifact, with no restricted API
+fallback. Model results carry structured license metadata with terms links and
+verification date. The shared output filter also removes previously stored
+restricted findings, appended prediction text, and derived interpretation text;
+the application must filter report-level notes and rebuild derived summaries.
+A commercial export must not simply relabel a frozen non-commercial report.
+
+Verified 2026-09-26 against the rendered official download portal and terms:
+- https://deepmind.google.com/science/alphagenome/downloads
+- https://deepmind.google.com/science/alphagenome/terms
+- https://deepmind.google.com/science/alphagenome/output-terms
+- https://zenodo.org/records/8208688/files/README.md

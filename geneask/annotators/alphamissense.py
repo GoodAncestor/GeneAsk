@@ -19,6 +19,7 @@ Data: AlphaMissense (Google DeepMind), CC BY-NC-SA 4.0 (non-commercial).
 from __future__ import annotations
 import os, gzip, sqlite3, urllib.request
 from pathlib import Path
+from biocore.licensing import commercial_mode, prediction_license
 from biocore.providers.base import Finding, Tier, Category
 
 _URL = "https://zenodo.org/records/8208688/files/AlphaMissense_hg38.tsv.gz"
@@ -93,9 +94,12 @@ def build_mirror(db_path: str | None = None, workdir: str | None = None,
 
 def mirror_status(db_path: str | None = None) -> dict:
     """Check readability and schema without scanning the multi-GB mirror."""
+    if commercial_mode():
+        return {"status": "license_blocked", "available": False,
+                "reason": "Non-commercial data withheld by commercial output policy.", "license": prediction_license("alphamissense")}
     path = Path(_db_path(db_path))
     result = {"status": "unavailable", "available": False, "assembly": "GRCh38",
-              "source_url": _URL}
+              "source_url": _URL, "license": prediction_license("alphamissense")}
     if not path.is_file():
         return result
     try:
@@ -111,6 +115,8 @@ def mirror_available(db_path: str | None = None) -> bool:
 
 
 def lookup(variant_id: str, db_path: str | None = None) -> dict | None:
+    if commercial_mode():
+        return None
     db = _db_path(db_path)
     if not Path(db).exists():
         return None
@@ -157,6 +163,7 @@ def annotate_findings(findings, db_path: str | None = None, status: dict | None 
                                      "protein_variant": rec["protein_variant"],
                                      "uniprot_id": rec["uniprot_id"], "assembly": "GRCh38",
                                      "provenance": "alphamissense_mirror", "source_url": _URL,
+                                     "license": prediction_license("alphamissense"),
                                      "score_explanation": "Computational missense prediction; not a personal disease probability."}
         f.description = (f"{f.description} — AlphaMissense: {rec['am_class'].replace('_',' ')} "
                          f"({rec['protein_variant']}, score {rec['pathogenicity']:.2f})")
@@ -180,5 +187,5 @@ def findings_for(variant_id: str, db_path: str | None = None) -> list[Finding]:
         tier=tier, categories=[Category.CLINICAL],
         detail={"pathogenicity": rec["pathogenicity"], "am_class": rec["am_class"],
                 "protein_variant": rec["protein_variant"], "uniprot_id": rec["uniprot_id"],
-                "topic": "clinical", "modality": "genome"},
+                "topic": "clinical", "modality": "genome", "license": prediction_license("alphamissense")},
         link="https://alphamissense.hegelab.org/")]
