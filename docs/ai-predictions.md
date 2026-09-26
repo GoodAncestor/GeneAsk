@@ -121,7 +121,7 @@ in the audited GeneAsk, bio-core or DNA-Report code.
 | Public AlphaGenome Atlas API, including API-returned AVI and cached API results | Withheld; the app only recognizes the downloaded AVI exception |
 | Downloaded AVI feature importance and merged splicing scores | Withheld; portal lists non-commercial use only |
 | AlphaGenome API and cached inference | Withheld under non-commercial access/output policy |
-| AlphaMissense mirror predictions | Withheld under CC BY-NC-SA 4.0 |
+| AlphaMissense mirror predictions | Allowed under CC BY 4.0, with attribution |
 
 This is the app's source-eligibility policy, not a general assurance about every
 possible commercial agreement with the provider. It does not enable separate
@@ -140,4 +140,13 @@ Verified 2026-09-26 against the rendered official download portal and terms:
 - https://deepmind.google.com/science/alphagenome/downloads
 - https://deepmind.google.com/science/alphagenome/terms
 - https://deepmind.google.com/science/alphagenome/output-terms
-- https://zenodo.org/records/8208688/files/README.md
+- https://github.com/google-deepmind/alphamissense#alphamissense-predictions-license
+
+AlphaMissense correction: the historical Zenodo README still says NC-SA, but
+the current official DeepMind repository licenses predictions under CC BY 4.0.
+The official Google bucket hg38 file has MD5
+`9fd167735f16a1b87da6eb3e4c25fcb5`, identical to the historical Zenodo artifact
+used by existing mirrors (verified by bucket HEAD and Zenodo metadata on
+2026-09-26). New downloads use the official bucket. Existing identical mirrors
+remain commercially eligible with attribution; they are not excluded by the
+commercial output mode.

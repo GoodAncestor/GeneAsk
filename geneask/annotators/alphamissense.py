@@ -13,16 +13,16 @@ gnomAD), so a carried variant gets an instant offline pathogenicity lookup.
 The built mirror is multi-GB (bigger than ClinVar) — build on local disk, then
 copy to shared storage (see worker README).
 
-Data: AlphaMissense (Google DeepMind), CC BY-NC-SA 4.0 (non-commercial).
-  https://zenodo.org/records/8208688/files/AlphaMissense_hg38.tsv.gz
+Data: AlphaMissense (Google DeepMind), CC BY 4.0 (attribution required).
+  https://storage.googleapis.com/dm_alphamissense/AlphaMissense_hg38.tsv.gz
 """
 from __future__ import annotations
 import os, gzip, sqlite3, urllib.request
 from pathlib import Path
-from biocore.licensing import commercial_mode, prediction_license
+from biocore.licensing import prediction_license
 from biocore.providers.base import Finding, Tier, Category
 
-_URL = "https://zenodo.org/records/8208688/files/AlphaMissense_hg38.tsv.gz"
+_URL = "https://storage.googleapis.com/dm_alphamissense/AlphaMissense_hg38.tsv.gz"
 _DB_ENV = "ALPHAMISSENSE_MIRROR_DB"
 _DEFAULT_DB = "/data/alphamissense/alphamissense_mirror.db"
 
@@ -94,9 +94,6 @@ def build_mirror(db_path: str | None = None, workdir: str | None = None,
 
 def mirror_status(db_path: str | None = None) -> dict:
     """Check readability and schema without scanning the multi-GB mirror."""
-    if commercial_mode():
-        return {"status": "license_blocked", "available": False,
-                "reason": "Non-commercial data withheld by commercial output policy.", "license": prediction_license("alphamissense")}
     path = Path(_db_path(db_path))
     result = {"status": "unavailable", "available": False, "assembly": "GRCh38",
               "source_url": _URL, "license": prediction_license("alphamissense")}
@@ -115,8 +112,6 @@ def mirror_available(db_path: str | None = None) -> bool:
 
 
 def lookup(variant_id: str, db_path: str | None = None) -> dict | None:
-    if commercial_mode():
-        return None
     db = _db_path(db_path)
     if not Path(db).exists():
         return None
