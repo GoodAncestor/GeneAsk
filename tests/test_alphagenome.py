@@ -171,3 +171,28 @@ def test_legacy_cache_direction_is_untrusted(tmp_path):
     p = Pacing()
     assert score_variant("1-100-A-G", "unused", db, p)["direction"] == "unknown"
     assert p.cache_hits == 1 and p.spent == 0
+
+
+def test_explicit_research_request_is_not_a_novelty_claim():
+    from geneask.annotators.alphagenome_vep import _is_uncertain
+    for sig, expected in ((None, True), ("Benign", False), ("Likely pathogenic", False),
+                          ("Uncertain significance", True)):
+        detail = {"research_candidate": True, "clinvar_lookup": "unavailable",
+                  "clinical_significance": sig}
+        finding = Finding("1-100-A-G", "variant_lookup", "d", Tier.SPECULATIVE,
+                          [Category.CLINICAL], detail=detail)
+        assert _is_uncertain(finding) is expected
+        assert "novel_candidate" not in finding.detail
+
+
+def test_connection_readiness_has_supported_timeout(monkeypatch):
+    import sys, types
+    from geneask.annotators.alphagenome_vep import _client
+    parent = types.ModuleType("alphagenome")
+    module = types.ModuleType("alphagenome.models")
+    calls = []
+    module.dna_client = types.SimpleNamespace(create=lambda key, **kw: calls.append(kw))
+    monkeypatch.setitem(sys.modules, "alphagenome", parent)
+    monkeypatch.setitem(sys.modules, "alphagenome.models", module)
+    _client("unused")
+    assert calls == [{"timeout": 10.0}]

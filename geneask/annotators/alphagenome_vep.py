@@ -96,7 +96,8 @@ def _parse_vid(variant_id: str):
 
 def _client(api_key: str):
     from alphagenome.models import dna_client
-    return dna_client.create(api_key)
+    # SDK timeout bounds connection readiness only, not the scoring RPC.
+    return dna_client.create(api_key, timeout=10.0)
 
 
 def _recommended_scorers():
@@ -289,7 +290,8 @@ def _is_uncertain(f) -> bool:
         return True
     if "benign" in sig or "pathogenic" in sig:
         return False
-    return detail.get("novel_candidate") is True
+    return (detail.get("novel_candidate") is True or
+            detail.get("research_candidate") is True)
 
 
 def annotate_findings(findings, cache_db: str | None = None,

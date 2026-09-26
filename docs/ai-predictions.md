@@ -1,7 +1,9 @@
 # AI prediction integration
 
 AlphaGenome enriches uncertain/conflicting catalogue findings and explicitly
-selected `detail.novel_candidate = True` findings. Resolved benign/pathogenic
+selected `detail.novel_candidate = True` findings. An explicit single-variant
+research request may instead set `detail.research_candidate = True`; this grants
+scoring eligibility without asserting catalogue absence or biological novelty. Resolved benign/pathogenic
 classifications are not overridden by the novel marker. The caller is responsible
 for GRCh38 input, genotype quality, and a bounded candidate selection. These
 computational results do not change clinical tiers.
@@ -54,3 +56,15 @@ Sources:
 - https://www.alphagenomedocs.com/api/generated/alphagenome.atlas.atlas.AtlasClient.html
 - https://github.com/google-deepmind/alphagenome/blob/main/src/alphagenome/atlas/atlas.py
 - https://deepmind.google/science/alphagenome/
+
+## Request timeout limitation
+
+Verified against official SDK v0.8.0 source: `DnaClient.score_variant` has no
+`timeout` parameter and invokes the streaming RPC without a deadline. We bound
+connection readiness with the supported `create(timeout=10.0)` argument. The
+report pacing deadline bounds waiting for rate capacity and whether another
+request starts; it cannot cancel an in-flight score RPC or the SDK retry loop.
+Do not describe this as a hard end-to-end request timeout. A true RPC deadline
+requires SDK support or a separately reviewed gRPC channel integration.
+
+Source: https://github.com/google-deepmind/alphagenome/blob/v0.8.0/src/alphagenome/models/dna_client.py
