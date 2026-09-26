@@ -121,3 +121,53 @@ def test_missing_client_is_surfaced_not_swallowed(monkeypatch):
                   detail={"clinical_significance": "Uncertain significance"})]
     assert ag.annotate_findings(fs, pacing=p) == 0
     assert p.client_missing and p.spent == 0    # flagged, and no slot wasted
+
+
+def test_novel_candidates_and_coverage(monkeypatch):
+    from geneask.annotators import alphagenome_vep as ag
+    monkeypatch.setenv("ALPHAGENOME_ENABLED", "1")
+    monkeypatch.setenv("ALPHA_GENOME_KEY", "unused")
+    monkeypatch.setattr(ag, "client_available", lambda: True)
+    monkeypatch.setattr(ag, "score_variant", lambda marker, *a, **kw:
+                        {"top_modality": "SPLICE_SITES", "quantile_score": .98, "direction": "unknown"})
+    def finding(marker, **detail):
+        return Finding(marker, "novel_variant", "d", Tier.SPECULATIVE, [Category.CLINICAL], detail=detail)
+    fs = [finding("1-100-A-G", novel_candidate=True),
+          finding("1-100-A-G", novel_candidate=True),
+          finding("1-200-A-G", novel_candidate=True),
+          finding("1-300-A-G", novel_candidate=True, clinical_significance="Benign"),
+          finding("1-400-A-G", novel_candidate=True, clinical_significance="Pathogenic")]
+    p = ag.Pacing(max_variants=1)
+    assert ag.annotate_findings(fs, pacing=p) == 2
+    assert p.as_dict()["eligible"] == 2
+    assert (p.scored, p.skipped, p.status) == (1, 1, "partial")
+    assert "increase" not in fs[0].description
+    assert "alphagenome" not in fs[-1].detail
+
+
+def test_summary_unsigned_metadata_and_nonfinite():
+    from geneask.annotators.alphagenome_vep import summarize_scores
+    class Frame:
+        columns = ["quantile_score"]
+        def __len__(self): return 2
+        def to_dict(self, orientation):
+            return [{"quantile_score": .99, "raw_score": .4, "output_type": "SPLICE_SITES",
+                     "gene_name": "TAL1", "biosample_name": "blood"},
+                    {"quantile_score": float("nan")}]
+    s = summarize_scores(Frame(), "1-100-A-G")
+    assert s["direction"] == "unknown"
+    assert s["gene_name"] == "TAL1" and s["biosample_name"] == "blood"
+    assert s["n_tracks"] == 1 and len(s["top_tracks"]) == 1
+    assert s["provenance"] == "alphagenome_api"
+
+
+def test_legacy_cache_direction_is_untrusted(tmp_path):
+    import json
+    from geneask.annotators.alphagenome_vep import Pacing
+    db = str(tmp_path / "cache.db")
+    with sqlite3.connect(db) as con:
+        con.execute("CREATE TABLE ag(variant_id TEXT PRIMARY KEY, summary TEXT)")
+        con.execute("INSERT INTO ag VALUES (?,?)", ("1-100-A-G", json.dumps({"direction": "increase"})))
+    p = Pacing()
+    assert score_variant("1-100-A-G", "unused", db, p)["direction"] == "unknown"
+    assert p.cache_hits == 1 and p.spent == 0

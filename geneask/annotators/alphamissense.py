@@ -91,49 +91,78 @@ def build_mirror(db_path: str | None = None, workdir: str | None = None,
     return {"source": "alphamissense", "variants": n, "db": db}
 
 
+def mirror_status(db_path: str | None = None) -> dict:
+    """Check readability and schema without scanning the multi-GB mirror."""
+    path = Path(_db_path(db_path))
+    result = {"status": "unavailable", "available": False, "assembly": "GRCh38",
+              "source_url": _URL}
+    if not path.is_file():
+        return result
+    try:
+        with sqlite3.connect(path.resolve().as_uri() + "?mode=ro", uri=True) as con:
+            row = con.execute("SELECT variant_id, pathogenicity, am_class, uniprot_id, protein_variant FROM am LIMIT 1").fetchone()
+        return {**result, "status": "ready" if row else "empty", "available": bool(row)}
+    except sqlite3.Error:
+        return {**result, "status": "invalid"}
+
+
 def mirror_available(db_path: str | None = None) -> bool:
-    """Whether a mirror exists at db_path (or the default/env location) — lets a
-    caller (e.g. the annotated-VCF writer) report accurate provenance without
-    duplicating the resolution logic every lookup() call already applies."""
-    return Path(_db_path(db_path)).exists()
+    return mirror_status(db_path)["available"]
 
 
 def lookup(variant_id: str, db_path: str | None = None) -> dict | None:
     db = _db_path(db_path)
     if not Path(db).exists():
         return None
-    con = sqlite3.connect(db)
+    con = sqlite3.connect(Path(db).resolve().as_uri() + "?mode=ro", uri=True)
     con.row_factory = sqlite3.Row
     try:
         r = con.execute("SELECT * FROM am WHERE variant_id=?", (variant_id,)).fetchone()
-    except sqlite3.OperationalError:
+    except sqlite3.DatabaseError:
         return None
     finally:
         con.close()
     return dict(r) if r else None
 
 
-def annotate_findings(findings, db_path: str | None = None) -> int:
+def annotate_findings(findings, db_path: str | None = None, status: dict | None = None) -> int:
     """Attach AlphaMissense pathogenicity to variant findings whose marker is a
     'chrom-pos-ref-alt' id, in place. Mirror-first: no-op if the mirror isn't
     built. Adds a note only when a variant is actually in AlphaMissense (missense)."""
+    findings = list(findings)
+    coverage = mirror_status(db_path)
+    coverage.update(eligible=0, scored=0, not_found=0, skipped=0)
+    seen = set()
     n = 0
     for f in findings:
         m = f.marker or ""
         parts = m.split("-")
         if len(parts) != 4 or not parts[1].isdigit():
             continue
+        unique = m not in seen
+        seen.add(m)
+        coverage["eligible"] += int(unique)
+        if not coverage["available"]:
+            coverage["skipped"] += int(unique)
+            continue
         rec = lookup(m, db_path)
         if not rec:
+            coverage["not_found"] += int(unique)
             continue
+        coverage["scored"] += int(unique)
         if f.detail is None:
             f.detail = {}
         f.detail["alphamissense"] = {"pathogenicity": rec["pathogenicity"],
                                      "class": rec["am_class"],
-                                     "protein_variant": rec["protein_variant"]}
+                                     "protein_variant": rec["protein_variant"],
+                                     "uniprot_id": rec["uniprot_id"], "assembly": "GRCh38",
+                                     "provenance": "alphamissense_mirror", "source_url": _URL,
+                                     "score_explanation": "Computational missense prediction; not a personal disease probability."}
         f.description = (f"{f.description} — AlphaMissense: {rec['am_class'].replace('_',' ')} "
                          f"({rec['protein_variant']}, score {rec['pathogenicity']:.2f})")
         n += 1
+    if status is not None:
+        status.update(coverage)
     return n
 
 

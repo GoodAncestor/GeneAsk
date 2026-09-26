@@ -31,7 +31,8 @@ on a possibly-public site):
 Enrichment only — it annotates existing findings, it is not a finding source.
 """
 from __future__ import annotations
-import os, json, sqlite3
+import os, json, sqlite3, math
+from datetime import datetime, timezone
 from pathlib import Path
 
 _KEY_ENV = "ALPHA_GENOME_KEY"
@@ -133,6 +134,15 @@ class Pacing:
         # a deployment fault, and one the caller should say out loud rather than
         # letting it read as "no regulatory effects found"
         self.client_missing = False
+        self.eligible = self.scored = self.failed = self.skipped = 0
+        self.cache_hits = self.no_result = 0
+        self.status = "ready"
+
+    def as_dict(self) -> dict:
+        """Report-level coverage; absent results never imply benign effects."""
+        return {key: getattr(self, key) for key in (
+            "status", "eligible", "scored", "failed", "skipped", "cache_hits",
+            "no_result", "spent", "halted", "client_missing")}
 
     def acquire(self) -> bool:
         if self.halted:
@@ -175,8 +185,17 @@ def score_variant(variant_id: str, api_key: str, cache_db: str | None = None,
     try:
         row = con.execute("SELECT summary FROM ag WHERE variant_id=?", (variant_id,)).fetchone()
         if row is not None:
-            return json.loads(row[0]) if row[0] else None
+            if pacing is not None:
+                pacing.cache_hits += 1
+            result = json.loads(row[0]) if row[0] else None
+            if result and result.get("schema_version") != 2:
+                # Old summaries inferred a biological direction from every quantile.
+                result = {**result, "direction": "unknown", "provenance": "legacy_cache"}
+            if not result and pacing is not None:
+                pacing.no_result += 1
+            return result
         if pacing is not None and not pacing.acquire():
+            pacing.skipped += 1
             return None    # not asked, so not known to be absent — do not cache
         if pacing is not None:
             pacing.spent += 1   # count the attempt: a call that fails still cost
@@ -190,32 +209,23 @@ def score_variant(variant_id: str, api_key: str, cache_db: str | None = None,
             variant = genome.Variant(chromosome=chrom, position=pos,
                                      reference_bases=ref, alternate_bases=alt)
             half = _SEQ_LEN // 2
-            interval = genome.Interval(chromosome=chrom, start=max(0, pos - half), end=pos + half)
+            start = max(0, pos - 1 - half)
+            interval = genome.Interval(chromosome=chrom, start=start, end=start + _SEQ_LEN)
             scores = client.score_variant(interval=interval, variant=variant,
                                           variant_scorers=_recommended_scorers())
             df = vs.tidy_scores(scores)
-            if df is not None and len(df):
-                # summarize using quantile_score (normalized -1..+1: the effect's
-                # percentile vs genome background — interpretable), NOT raw_score
-                # (unnormalized model output, up to ~1e5, meaningless to a reader).
-                col = "quantile_score" if "quantile_score" in df.columns else None
-                if col:
-                    df = df.assign(_abs=df[col].abs())
-                    top = df.loc[df["_abs"].idxmax()]
-                    modcol = "output_type" if "output_type" in df.columns else "variant_scorer"
-                    q = float(top[col])
-                    summary = {"variant_id": variant_id,
-                               "top_modality": str(top.get(modcol, "regulatory")),
-                               "quantile_score": round(q, 3),
-                               "direction": "increase" if q > 0 else "decrease",
-                               "n_tracks": int(len(df))}
+            summary = summarize_scores(df, variant_id)
+            if summary is None and pacing is not None:
+                pacing.no_result += 1
         except Exception as e:
             # RESOURCE_EXHAUSTED is the only quota signal AlphaGenome gives, since
             # they publish no number. Treat it as "stop for this run" rather than
             # one more failed variant, and never cache it: it says nothing about
             # the variant.
-            if pacing is not None and _is_resource_exhausted(e):
-                pacing.halt()
+            if pacing is not None:
+                pacing.failed += 1
+                if _is_resource_exhausted(e):
+                    pacing.halt()
             return None    # API/library error: don't cache, allow a later retry
         con.execute("INSERT OR REPLACE INTO ag VALUES (?,?)",
                     (variant_id, json.dumps(summary) if summary else ""))
@@ -225,50 +235,104 @@ def score_variant(variant_id: str, api_key: str, cache_db: str | None = None,
         con.close()
 
 
+def summarize_scores(df, variant_id: str) -> dict | None:
+    """Keep bounded track context, without interpreting unsigned scores as increases.
+
+    Quantiles are background ranks, not probabilities of disease. Direction is
+    deliberately left unspecified: recommended scorers mix signed differences,
+    absolute differences and active-allele activity.
+    """
+    if df is None or not len(df) or "quantile_score" not in df.columns:
+        return None
+    tracks = []
+    for row in df.to_dict("records"):
+        try:
+            q = float(row["quantile_score"])
+        except (TypeError, ValueError):
+            continue
+        if not math.isfinite(q):
+            continue
+        track = {"quantile_score": q, "direction": "unknown"}
+        for key in ("raw_score", "output_type", "variant_scorer", "gene_id", "gene_name",
+                    "biosample_name", "biosample_type", "ontology_curie", "strand"):
+            value = row.get(key)
+            if value is None or str(value) in ("nan", "<NA>", "None"):
+                continue
+            if key == "raw_score":
+                try:
+                    value = float(value)
+                except (ValueError, TypeError):
+                    continue
+                if not math.isfinite(value):
+                    continue
+            else:
+                value = str(value)
+            track[key] = value
+        tracks.append(track)
+    if not tracks:
+        return None
+    tracks.sort(key=lambda t: abs(t["quantile_score"]), reverse=True)
+    top = tracks[0]
+    return {**top, "variant_id": variant_id,
+            "top_modality": top.get("output_type", top.get("variant_scorer", "regulatory")),
+            "n_tracks": len(tracks), "top_tracks": tracks[:5], "schema_version": 2,
+            "assembly": "GRCh38", "sequence_length": _SEQ_LEN,
+            "provenance": "alphagenome_api", "scored_at": datetime.now(timezone.utc).isoformat(),
+            "score_explanation": "Background rank of predicted molecular effect; not a disease probability."}
+
+
 def _is_uncertain(f) -> bool:
-    """A variant finding the catalogues couldn't resolve — the case AlphaGenome
-    adds value for: ClinVar 'uncertain significance' or 'conflicting'."""
-    sig = str((f.detail or {}).get("clinical_significance", "")).lower()
-    return ("uncertain" in sig) or ("conflicting" in sig)
+    """Existing uncertain/conflicting records or explicitly selected novel variants."""
+    detail = f.detail or {}
+    sig = str(detail.get("clinical_significance", "")).lower()
+    if "uncertain" in sig or "conflicting" in sig:
+        return True
+    if "benign" in sig or "pathogenic" in sig:
+        return False
+    return detail.get("novel_candidate") is True
 
 
 def annotate_findings(findings, cache_db: str | None = None,
                       pacing: "Pacing | None" = None) -> int:
-    """Score the uncertain variant findings and attach the predicted regulatory
-    effect in place. No-op unless enabled + key present. Returns count.
-
-    Pass a pacing object to inspect afterwards whether the run was cut short by
-    the time budget or by AlphaGenome itself."""
-    if not _enabled():
-        return 0
-    api_key = os.environ.get(_KEY_ENV)
+    """Enrich eligible findings in place; inspect Pacing.as_dict for coverage."""
     if pacing is None:
-        pacing = default_pacing(cache_db)
-    if not client_available():
-        # Checked once here rather than discovered per variant, because per
-        # variant it is caught and discarded. Return before spending a rate slot
-        # on a call that cannot be made.
-        pacing.client_missing = True
+        pacing = default_pacing(cache_db) if _enabled() else Pacing()
+    # Deduplicate requests while attaching the result to every matching finding.
+    groups = {}
+    for f in findings:
+        if _parse_vid(f.marker or "") is not None and _is_uncertain(f):
+            groups.setdefault(f.marker, []).append(f)
+    pacing.eligible = len(groups)
+    if not _enabled():
+        pacing.status = ("missing_key" if os.environ.get(_ENABLED_ENV, "").lower()
+                         in ("1", "true", "yes", "on") else "disabled")
+        pacing.skipped = pacing.eligible
         return 0
-    # candidates: variant-id markers that are uncertain/non-catalogued
-    cands = [f for f in findings
-             if _parse_vid(f.marker or "") is not None and _is_uncertain(f)]
-    if pacing.max_variants:
-        cands = cands[:pacing.max_variants]
+    if not client_available():
+        pacing.client_missing = True
+        pacing.status = "client_missing"
+        pacing.skipped = pacing.eligible
+        return 0
+    candidates = list(groups)
+    if pacing.max_variants is not None:
+        candidates = candidates[:max(0, pacing.max_variants)]
+    pacing.skipped = pacing.eligible - len(candidates)
     n = 0
-    for f in cands:
-        s = score_variant(f.marker, api_key, cache_db=cache_db, pacing=pacing)
+    for index, marker in enumerate(candidates):
+        s = score_variant(marker, os.environ[_KEY_ENV], cache_db=cache_db, pacing=pacing)
         if not s:
             if pacing.halted:
-                break     # they said stop; the rest of the loop is just noise
+                pacing.skipped += len(candidates) - index - 1
+                break
             continue
-        if f.detail is None:
-            f.detail = {}
-        f.detail["alphagenome"] = s
-        q = abs(s.get("quantile_score", 0))
-        strength = "strong" if q >= 0.9 else ("moderate" if q >= 0.5 else "weak")
-        f.description = (f"{f.description} — AlphaGenome predicts a {strength} "
-                         f"regulatory effect (predicted {s['direction']} in "
-                         f"{s['top_modality']}, quantile {s['quantile_score']:+.2f})")
-        n += 1
+        pacing.scored += 1
+        for f in groups[marker]:
+            if f.detail is None:
+                f.detail = {}
+            f.detail["alphagenome"] = s
+            f.description = (f"{f.description} — AlphaGenome computational prediction: "
+                             f"{s['top_modality']}, background quantile {s['quantile_score']:+.2f}")
+            n += 1
+    pacing.status = ("rate_limited" if pacing.halted else
+                     "partial" if pacing.skipped or pacing.failed else "complete")
     return n

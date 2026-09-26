@@ -43,3 +43,21 @@ def test_annotate_in_place(tmp_path):
 def test_no_mirror_noop(tmp_path):
     assert lookup("1-100-G-T", str(tmp_path / "nope.db")) is None
     assert annotate_findings([], db_path=str(tmp_path / "nope.db")) == 0
+
+
+def test_mirror_status_and_missing_is_not_benign(tmp_path):
+    from geneask.annotators.alphamissense import mirror_status
+    missing = str(tmp_path / "missing.db")
+    assert mirror_status(missing)["status"] == "unavailable"
+    empty = tmp_path / "empty.db"
+    empty.touch()
+    assert mirror_status(str(empty))["status"] == "invalid"
+    db = _mini(tmp_path)
+    status = {}
+    fs = [Finding("1-999-A-G", "novel_variant", "d", Tier.SPECULATIVE, [Category.CLINICAL], detail={})]
+    assert annotate_findings(fs, db, status=status) == 0
+    assert status["not_found"] == 1 and status["scored"] == 0
+    assert "alphamissense" not in fs[0].detail
+    status = {}
+    annotate_findings(fs, missing, status=status)
+    assert status["skipped"] == 1 and status["not_found"] == 0
