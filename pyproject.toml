@@ -8,7 +8,7 @@ license-files = ["LICENSE", "NOTICE"]
 dependencies = [
     # GoodAncestor/bio-core — shared mechanism (private repo). git-source so a clean
     # install resolves from GitHub; private-repo access uses git credentials (see README).
-    "biocore @ git+https://github.com/GoodAncestor/bio-core.git@c94d4f8899e37f3d37cd9fbc2037469ab53539ea",
+    "biocore @ git+https://github.com/GoodAncestor/bio-core.git@0411e3ee21715bcfdbda314ed7f056d8903d7fa9",
     # GRCh37->38 liftover for build-37 consumer arrays (panel is GRCh38); uses the
     # bundled UCSC chain. Without it, build-37 uploads silently match no ClinVar sites.
     "pyliftover",
