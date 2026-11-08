@@ -1,12 +1,12 @@
 """The copy tables: lookup rules, fallbacks, and the house voice."""
-import re
+import json
 from pathlib import Path
+import pytest
+from biocore.copy.check import check_table, format_problems
 from geneask.interpret.copy import (classify, platform_class, next_step, gene_function,
                                     condition_phrase, copy_meta, _TABLES)
 
-BANNED = re.compile(r"honest|it's not |not a [A-Z]|the point is|worth (noting|being explicit)"
-                    r"|in other words|crucially|importantly,|notably,|by design|you have|you will",
-                    re.I)
+_ACMG = Path(__file__).resolve().parents[1] / "geneask/data/reference/acmg_sf_v3_2.json"
 
 
 def test_classify_precedence_matches_render_direction():
@@ -49,14 +49,13 @@ def test_gene_function_and_condition():
     assert c2["name"] == "Some rare condition" and c2["inheritance"] is None
 
 
-def test_every_table_sentence_passes_the_voice_check():
-    for name, path in _TABLES.items():
-        text = Path(path).read_text()
-        hits = [m.group(0) for m in BANNED.finditer(text)]
-        assert not hits, f"{name}: {hits}"
-        for s in re.findall(r'"([^"]{40,})"', text):
-            for sentence in re.split(r"(?<=[.!?])\s+", s):
-                assert len(sentence.split()) <= 25, f"{name}: too long: {sentence}"
+@pytest.mark.parametrize("name,path", [*_TABLES.items(), ("acmg_sf_v3_2", _ACMG)])
+def test_every_table_passes_the_shared_validator(name, path):
+    # The house-voice rules live in biocore.copy.check, shared with bio-core's
+    # terms test and any future save path: banned constructions, forbidden
+    # clinical phrasing, <=25 words per sentence, templates, URLs, enums, header.
+    problems = check_table(name, json.loads(Path(path).read_text()))
+    assert problems == [], format_problems(problems)
 
 
 def test_gene_table_covers_the_panel_and_the_acmg_list():
