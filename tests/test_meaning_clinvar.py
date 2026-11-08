@@ -1,5 +1,6 @@
 """A ClinVar finding's four parts come from its fields and the copy tables."""
 from biocore.providers.base import Finding, Tier, Category
+from geneask.interpret.copy import copy_meta
 from geneask.interpret.meaning import interpret, interpret_clinvar
 
 
@@ -29,7 +30,10 @@ def test_four_parts_come_from_fields_and_tables():
     assert "2 of 4 review stars" in ip.how_sure
     assert "5 of 1,560,000" in ip.how_sure
     assert "genetic counsel" in ip.next_step.lower()
-    assert ip.copy_version == "1" and ip.reviewed_by == []
+    # The card carries the table's own header, whatever a review has set it to.
+    meta = copy_meta("clinical_next_step")
+    assert ip.copy_version == meta["version"] and ip.reviewed_by == meta["reviewed_by"]
+    assert isinstance(ip.reviewed_by, list)
 
 
 def test_array_call_asks_for_confirmation_and_recessive_het_is_a_carrier():
